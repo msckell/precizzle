@@ -1,6 +1,7 @@
 package calc
 
 import (
+	"errors"
 	"math/big"
 	"strings"
 	"testing"
@@ -117,21 +118,65 @@ func TestBitsAboveMaxDenominator(t *testing.T) {
 	}
 }
 
+// floorRoot returns ⌊y^(1/n)⌋ for y > 0, with Newton's method on integers.
+func floorRoot(y *big.Int, n int64) *big.Int {
+	bn := big.NewInt(n)
+	x := new(big.Int).Lsh(one, uint(y.BitLen())/uint(n)+1)
+	for {
+		// next = ((n-1)·x + y / x^(n-1)) / n, which decreases toward the root from above.
+		next := new(big.Int).Quo(y, new(big.Int).Exp(x, big.NewInt(n-1), nil))
+		next.Add(next, new(big.Int).Mul(x, big.NewInt(n-1))).Quo(next, bn)
+		if next.Cmp(x) >= 0 {
+			return x
+		}
+		x = next
+	}
+}
+
+// BenchmarkPowerWorstCase measures the costliest powers. The "rejected early"
+// cases are refused by powerBounds; the "full power" cases compute numbers of
+// millions of bits. Each case checks its path and its result before timing.
 func BenchmarkPowerWorstCase(b *testing.B) {
 	oneAnd1000Digits := "1." + strings.Repeat("0", 999) + "1"
-	for _, base := range []string{oneAnd1000Digits, "~" + oneAnd1000Digits} {
-		x, err := Parse(base)
+	parse := func(s string) Number {
+		n, err := Parse(s)
 		if err != nil {
 			b.Fatal(err)
 		}
-		exponent, _ := Parse("1000")
-		name := "exact"
-		if x.approximate {
-			name = "approximate"
+		return n
+	}
+	// 10^(1/25) raised to 1000 is 10^40. Its 1000-digit truncation
+	// ⌊10^(1/25) × 10^1000⌋ / 10^1000 = ⌊(10^25001)^(1/25)⌋ / 10^1000 raised to
+	// 1000 lands just below 10^40: too close for the bounds to decide, so the
+	// full power is computed.
+	root := floorRoot(new(big.Int).Exp(big.NewInt(10), big.NewInt(1+25*1000), nil), 25)
+	nearBoundary := Number{rat: new(big.Rat).SetFrac(root, new(big.Int).Exp(big.NewInt(10), big.NewInt(1000), nil))}
+
+	tests := []struct {
+		name      string
+		base      Number
+		exponent  Number
+		fullPower bool
+		want      Result
+		wantErr   error
+	}{
+		{"exact, rejected early", parse(oneAnd1000Digits), parse("1000"), false, Result{}, ErrResultTooPrecise},
+		{"exact, full power", nearBoundary, parse("1000"), true, Result{}, ErrResultTooPrecise},
+		{"approximate, rejected early", parse("~1e-500"), parse("1000"), false, Result{}, ErrResultTooPrecise},
+		{"approximate, full power", parse("~" + oneAnd1000Digits), parse("1000"), true, Result{"~1", "1", Approximate}, nil},
+	}
+	for _, tt := range tests {
+		k := tt.exponent.rat.Num().Int64()
+		early := powerBounds(tt.base.rat.Num(), tt.base.rat.Denom(), k, tt.base.approximate) != nil
+		if early == tt.fullPower {
+			b.Fatalf("%s: rejected early = %v, want %v", tt.name, early, !tt.fullPower)
 		}
-		b.Run(name, func(b *testing.B) {
+		if got, err := Power(tt.base, tt.exponent); got != tt.want || !errors.Is(err, tt.wantErr) {
+			b.Fatalf("%s: Power = %+v, %v, want %+v, %v", tt.name, got, err, tt.want, tt.wantErr)
+		}
+		b.Run(tt.name, func(b *testing.B) {
 			for b.Loop() {
-				_, _ = Power(x, exponent)
+				_, _ = Power(tt.base, tt.exponent)
 			}
 		})
 	}
