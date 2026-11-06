@@ -41,4 +41,10 @@ Chat with the owner in Spanish. Everything in the repository or on GitHub is in 
 
 ## Commands
 
-None yet. Build, test and run commands are added here as each layer appears.
+Backend, run from `backend/`:
+
+- Format check: `gofmt -l .` (must print nothing)
+- Vet: `go vet ./...`
+- Test: `go test ./...`
+- Build: `go build ./...`
+- Run: `go run .` (listens on `:8080`)
