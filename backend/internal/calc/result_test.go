@@ -82,6 +82,7 @@ func TestResultRoundsHalfEven(t *testing.T) {
 		{"below the tie rounds down", "1.0000000000000000000149999", "1.00000000000000000001"},
 		{"rounding carries into the integer part", "9.999999999999999999995", "10"},
 		{"rounding a tiny mantissa up to 10 renormalizes", "9.9999999999999999999999e-25", "1e-24"},
+		{"rounding up to 10^-20 writes plain notation", "9.9999999999999999999999e-21", "0.00000000000000000001"},
 		{"tiny tie goes to even", "1.000000000000000000005e-30", "1e-30"},
 		{"mantissa stops at the 1000th fractional digit", "1.23456789012345678901234e-990", "1.2345678901e-990"},
 		{"just above half of 10^-1000 rounds to 10^-1000", "6e-1001", "1e-1000"},
@@ -140,7 +141,7 @@ func TestResultValueParsesBack(t *testing.T) {
 		"0", "-7", "0.3", "1e-25", "-1.25e-30", "1/3", "-4000/3", "1/3000000000000000000000000000000",
 		"1/" + strings.Repeat("9", 1000), "0." + strings.Repeat("0", 999) + "1",
 		"~1.414213562373095048801688", "~-0.123", "~1/3000000000000000000000000000000",
-		"~9.9999999999999999999999e-25", "~1.23456789012345678901234e-990", "~6e-1001",
+		"~9.9999999999999999999999e-25", "~9.9999999999999999999999e-21", "~1.23456789012345678901234e-990", "~6e-1001",
 	}
 	for _, in := range tests {
 		t.Run(in, func(t *testing.T) {

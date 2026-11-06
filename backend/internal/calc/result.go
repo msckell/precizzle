@@ -59,11 +59,7 @@ func result(num, den *big.Int, approximate bool) (Result, error) {
 		return Result{Value: r.String(), Decimal: decimal(num, den, repeatingDigits, false), Kind: Repeating}, nil
 	}
 	scaled := new(big.Int).Quo(new(big.Int).Mul(num, pow10(n)), den)
-	value := scaledString(scaled, n, false)
-	if num.Sign() != 0 && magnitude(num, den) < scientificBelow {
-		return Result{Value: value, Decimal: scaledString(scaled, n, true), Kind: Exact}, nil
-	}
-	return Result{Value: value, Decimal: value, Kind: Exact}, nil
+	return Result{Value: plainString(scaled, n), Decimal: decimalString(scaled, n), Kind: Exact}, nil
 }
 
 // checkLimits applies the limits of docs/SPEC.md. den is positive, and for
@@ -100,22 +96,22 @@ func decimal(num, den *big.Int, digits int, approximate bool) string {
 	if num.Sign() == 0 {
 		return "0"
 	}
-	f, scientific := place(magnitude(num, den), digits, approximate)
-	return scaledString(roundHalfEven(num, den, f), f, scientific)
+	f := place(magnitude(num, den), digits, approximate)
+	return decimalString(roundHalfEven(num, den, f), f)
 }
 
 // place returns the fractional digit at which a value of magnitude e is
-// rounded, and whether it is written in scientific notation. Approximate
-// values never go past the 1000th fractional digit.
-func place(e, digits int, approximate bool) (f int, scientific bool) {
+// rounded: a fixed number of fractional digits, or of mantissa digits below
+// 10^-20. Approximate values never go past the 1000th fractional digit.
+func place(e, digits int, approximate bool) int {
 	if e >= scientificBelow {
-		return digits, false
+		return digits
 	}
-	f = digits - e
+	f := digits - e
 	if approximate {
 		f = min(f, maxFractionDigits)
 	}
-	return f, true
+	return f
 }
 
 // magnitude returns ⌊log10 |num/den|⌋ for a non-zero num.
@@ -157,27 +153,38 @@ func roundHalfEven(num, den *big.Int, f int) *big.Int {
 	return q
 }
 
-// scaledString writes n × 10^-f without trailing fractional zeros, in plain or scientific notation.
-func scaledString(n *big.Int, f int, scientific bool) string {
+// plainString writes n × 10^-f in plain notation, without trailing fractional zeros.
+func plainString(n *big.Int, f int) string {
 	digits := new(big.Int).Abs(n).String()
-	var s string
-	if scientific {
-		s = digits[:1]
-		if mantissa := strings.TrimRight(digits[1:], "0"); mantissa != "" {
-			s += "." + mantissa
-		}
-		s += "e" + strconv.Itoa(len(digits)-1-f)
-	} else {
-		if len(digits) <= f {
-			digits = strings.Repeat("0", f-len(digits)+1) + digits
-		}
-		s = digits[:len(digits)-f]
-		if fraction := strings.TrimRight(digits[len(digits)-f:], "0"); fraction != "" {
-			s += "." + fraction
-		}
+	if len(digits) <= f {
+		digits = strings.Repeat("0", f-len(digits)+1) + digits
 	}
+	s := digits[:len(digits)-f]
+	if fraction := strings.TrimRight(digits[len(digits)-f:], "0"); fraction != "" {
+		s += "." + fraction
+	}
+	return sign(n) + s
+}
+
+// decimalString writes n × 10^-f like plainString, or in scientific notation
+// when 0 < |n × 10^-f| < 10^-20. The notation depends on the written value, not
+// on the value before rounding, so a value that is sent back reads the same.
+func decimalString(n *big.Int, f int) string {
+	digits := new(big.Int).Abs(n).String()
+	e := len(digits) - 1 - f
+	if n.Sign() == 0 || e >= scientificBelow {
+		return plainString(n, f)
+	}
+	s := digits[:1]
+	if mantissa := strings.TrimRight(digits[1:], "0"); mantissa != "" {
+		s += "." + mantissa
+	}
+	return sign(n) + s + "e" + strconv.Itoa(e)
+}
+
+func sign(n *big.Int) string {
 	if n.Sign() < 0 {
-		s = "-" + s
+		return "-"
 	}
-	return s
+	return ""
 }
