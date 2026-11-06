@@ -102,6 +102,7 @@ Every result has a `kind` (D23):
 - Square roots are correctly rounded: the 20 digits are those of the true root, not of an intermediate approximation.
 - Round half even: a tie goes to the even digit, so 0.125 rounded to 2 digits is 0.12, and 0.135 is 0.14.
 - When 0 < \|x\| < 10⁻²⁰, `decimal` uses scientific notation: one non-zero digit before the point, the same number of fractional digits in the mantissa, then `e` and the exponent (`3.3333…3333e-31`). An approximate result never goes past the 1000th fractional digit of its plain form, so its mantissa can have fewer than 20 fractional digits.
+- The notation depends on the value the API returns, after rounding, not on the value before rounding (D36). An approximate result just below 10⁻²⁰ that rounds to 10⁻²⁰ is written `0.00000000000000000001`, the same as when that value is sent back.
 - A non-zero result never becomes 0. It is either represented or rejected with `result_too_precise` (D24).
 
 ### Examples
@@ -152,10 +153,12 @@ Every row was checked with exact rational arithmetic. Errors:
 ### Conventions
 
 - Every operation is `POST /api/v1/{operation}` (D14).
-- The request has `Content-Type: application/json` and a body of at most 64 KiB. The body is a JSON object whose fields are strings (D4). Unknown fields are rejected, and `null` counts as a missing field.
+- The request has `Content-Type: application/json` and a body of at most 64 KiB. Media type parameters are allowed, so `application/json; charset=utf-8` is accepted. The body is a JSON object whose fields are strings (D4). Unknown fields are rejected, and `null` counts as a missing field.
+- The body is decoded strictly (D35). Member names are case-sensitive, so `"A"` is an unknown field. A duplicate member, invalid UTF-8 or any data after the object is `invalid_json`.
 - A success is `200` with `Content-Type: application/json` and the body `{"value": "...", "decimal": "...", "kind": "..."}` (D21).
 - An error uses RFC 9457 Problem Details with `Content-Type: application/problem+json` (D5). See [Errors](#errors).
 - The API is stateless and has no authentication.
+- A path that is not in clean form, with an empty segment (`//`) or a `.` or `..` segment, gets `307 Temporary Redirect` with a `Location` header that holds the clean path, for example `/api/v1//add` to `/api/v1/add` (D38). It is the standard behavior of Go's `ServeMux`. A `307` keeps the method and the body, so a client that follows it sends the same request to the clean path. The redirect is not a Problem Details response.
 
 ### Endpoints
 
@@ -170,7 +173,11 @@ Every row was checked with exact rational arithmetic. Errors:
 | `POST /api/v1/percentage` | `{"percent", "base"?, "operator"?}` | the rules in [Operations](#operations) | `missing_field` (`base` without `operator` or the reverse), `invalid_operator`, `division_by_zero` (`divide` with a percent of 0) |
 
 - In `percentage`, `operator` is one of `add`, `subtract`, `multiply` or `divide`.
-- Every endpoint can also return `invalid_json`, `missing_field`, `unknown_field`, `invalid_number`, `operand_out_of_range`, `result_too_large` and `result_too_precise`.
+- Every endpoint can also return `invalid_json`, `missing_field`, `unknown_field`, `invalid_number`, `operand_out_of_range`, `result_too_large`, `result_too_precise` and, if the server has a bug, `internal_error`.
+
+### Health
+
+`GET /healthz` returns `200` with `Content-Type: application/json` and the body `{"status": "ok"}` (D32). It sits outside `/api/`, so the rule that every path under `/api/` accepts only `POST` has no exception. `HEAD /healthz` returns the same status and headers without a body. Any other method returns `method_not_allowed` with `Allow: GET, HEAD`.
 
 ### Examples
 
@@ -241,10 +248,21 @@ Every error is a Problem Details object (RFC 9457) with these members:
 | `code` | A stable, machine-readable code (extension member) |
 | `field` | The request field at fault, when there is one (extension member) |
 
+Request errors name the field they are about. Calculation errors use these fields:
+
+| Error | `field` |
+|---|---|
+| `division_by_zero` in `divide` | `b` |
+| `division_by_zero` in `percentage` | `percent` |
+| `division_by_zero` in `power` (0 raised to a negative exponent) | `base` |
+| `negative_square_root` | `value` |
+| `exponent_not_integer`, `exponent_out_of_range` | `exponent` |
+| `result_too_large`, `result_too_precise` | none |
+
 Example:
 
 ```http
-HTTP/1.1 422 Unprocessable Content
+HTTP/1.1 422 Unprocessable Entity
 Content-Type: application/problem+json
 
 {
@@ -257,28 +275,42 @@ Content-Type: application/problem+json
 }
 ```
 
-`400` means the request is wrong and the client must fix it. `422` means the request is well formed, but the result does not exist or cannot be represented (D17).
+The text after the status code in the status line is informational, and clients rely only on the code. Go writes `422 Unprocessable Entity`, the name from RFC 4918; RFC 9110 renamed it `Unprocessable Content` with the same meaning.
+
+`400` means the request is wrong and the client must fix it. `422` means the request is well formed, but the result does not exist or cannot be represented (D17). `500` means the server failed, whatever the request (D37).
 
 | Code | Status | Title | When |
 |---|---|---|---|
-| <a id="invalid_json"></a>`invalid_json` | 400 | Invalid JSON | The body is not a single valid JSON object. |
+| <a id="invalid_json"></a>`invalid_json` | 400 | Invalid JSON | The body is not a single valid JSON object: a syntax error, invalid UTF-8, a duplicate member, data after the object, or a top-level value that is not an object. |
 | <a id="missing_field"></a>`missing_field` | 400 | Missing field | A required field is absent or `null`, or `percentage` has `base` without `operator` or the reverse. |
-| <a id="unknown_field"></a>`unknown_field` | 400 | Unknown field | The body has a field that the endpoint does not define. |
+| <a id="unknown_field"></a>`unknown_field` | 400 | Unknown field | The body has a field that the endpoint does not define. Names are case-sensitive. |
 | <a id="invalid_number"></a>`invalid_number` | 400 | Invalid number | A number field is not a JSON string, or the string does not match the [operand syntax](#operand-syntax). |
 | <a id="operand_out_of_range"></a>`operand_out_of_range` | 400 | Operand out of range | An operand is outside the [limits](#limits). |
 | <a id="exponent_not_integer"></a>`exponent_not_integer` | 400 | Exponent not integer | The exponent is not an exact integer. |
 | <a id="exponent_out_of_range"></a>`exponent_out_of_range` | 400 | Exponent out of range | The exponent is below −1000 or above 1000. |
-| <a id="invalid_operator"></a>`invalid_operator` | 400 | Invalid operator | `operator` is not `add`, `subtract`, `multiply` or `divide`. |
+| <a id="invalid_operator"></a>`invalid_operator` | 400 | Invalid operator | `operator` is not one of the JSON strings `add`, `subtract`, `multiply` or `divide`. |
 | <a id="division_by_zero"></a>`division_by_zero` | 422 | Division by zero | The divisor is zero: `b` in `divide`, a percent of 0 with `divide`, or 0 raised to a negative exponent. |
 | <a id="negative_square_root"></a>`negative_square_root` | 422 | Negative square root | `sqrt` received a negative value. |
 | <a id="result_too_large"></a>`result_too_large` | 422 | Result too large | \|result\| ≥ 10⁴⁰. |
 | <a id="result_too_precise"></a>`result_too_precise` | 422 | Result too precise | An exact terminating result needs more than 1000 fractional digits, an exact repeating result has a reduced denominator above 10¹⁰⁰⁰, or a non-zero approximate result would round to 0 at 1000 fractional digits. |
-| <a id="not_found"></a>`not_found` | 404 | Not found | No endpoint exists at the path under `/api/`. |
-| <a id="method_not_allowed"></a>`method_not_allowed` | 405 | Method not allowed | The path exists, but the method is not `POST`. The response includes `Allow: POST`. |
+| <a id="not_found"></a>`not_found` | 404 | Not found | No endpoint exists at the path. |
+| <a id="method_not_allowed"></a>`method_not_allowed` | 405 | Method not allowed | The path exists, but not for this method: the operations accept only `POST`, and `/healthz` accepts `GET` and `HEAD`. The `Allow` header lists the accepted methods. |
 | <a id="payload_too_large"></a>`payload_too_large` | 413 | Payload too large | The body is larger than 64 KiB. |
-| <a id="unsupported_media_type"></a>`unsupported_media_type` | 415 | Unsupported media type | `Content-Type` is not `application/json`. |
+| <a id="unsupported_media_type"></a>`unsupported_media_type` | 415 | Unsupported media type | `Content-Type` is missing, or its media type is not `application/json`. |
+| <a id="internal_error"></a>`internal_error` | 500 | Internal error | The calculation failed in a way the API does not expect, which is a bug in the server. The response gives no cause; the server records it in its log (D37). |
 
-When a request has several problems, the API reports only the first one, checked in this order: path and method, media type, body size, JSON syntax, unknown fields, missing fields, operand syntax, operand limits, exponent rules, and then the calculation itself.
+When a request has several problems, the API reports only the first one, checked in this order:
+
+1. Path and method. A path that is not in clean form is redirected before this check (see [Conventions](#conventions)).
+2. Media type.
+3. Body size.
+4. JSON syntax.
+5. Unknown fields, the first one in document order.
+6. Missing fields, in the order the [endpoint table](#endpoints) lists them.
+7. Operand syntax, field by field in that same order. In `percentage`, `operator` is checked here as well, after `percent` and `base`. A field that is not a JSON string is `invalid_number`, or `invalid_operator` for `operator`.
+8. Operand limits, field by field.
+9. Exponent rules.
+10. The calculation itself, including `internal_error`.
 
 ## Decisions log
 
@@ -313,6 +345,22 @@ When a request has several problems, the API reports only the first one, checked
 | D25 | Copying puts `decimal` on the clipboard with all its digits. Chaining and history use `value`. The display rules of D11 apply to `decimal`, so repeating results can expand to 100 digits, and tiny values are shown in scientific notation. | A decimal pastes correctly into other apps, while a fraction such as `1/3` can be misread (a spreadsheet turns it into a date). |
 | D26 | Frontend tooling: ESLint with typescript-eslint, and Prettier, with TypeScript pinned to `~6.0.3`. | The master prompt asks for ESLint and Prettier. The default Vite React-TS template (create-vite 9.3.4) ships oxlint and TypeScript 7.0, but typescript-eslint 8.72 supports only TypeScript below 6.1. The template's `--eslint` option ships ESLint with TypeScript `~6.0.3`, so the frontend is scaffolded with it. |
 | D27 | During local development the backend listens only on `127.0.0.1:8080`. The Docker setup (Block 3) sets the address its environment needs. | The owner does not want the development server reachable from other machines on the network. |
+
+### Block 1: Backend in Go
+
+| # | Decision | Reason |
+|---|---|---|
+| D28 | The arithmetic uses only Go's standard `math/big`: `big.Rat` holds every exact value and `big.Int.Sqrt` computes square roots. The backend implements its own operand parser and its own round half even. | An experiment with Go 1.27.3 compared shopspring/decimal 1.6.0, cockroachdb/apd 3.2.3 and `math/big`. Both decimal libraries store `1 ÷ 3` as a rounded decimal, so `1 ÷ 3 × 3` returns `0.999…` and breaks D21. shopspring also loses precision silently: by default `1 ÷ 3e30` returns `0` and `0 ^ −1` returns `0` without an error. `big.Rat` keeps `1/3` exactly, and `Rat.FloatPrec` tells whether a decimal terminates. Two documented gaps are covered by our own code: `Rat.FloatString` rounds halves away from zero, and `Rat.SetString` accepts forms outside the operand syntax, such as `+5` and `0x10`. |
+| D29 | The HTTP layer is the standard `net/http` `ServeMux` with method patterns (`POST /api/v1/add`). No router dependency. The backend answers `not_found` and `method_not_allowed` itself in Problem Details. | Seven fixed routes need no router. Both the standard mux and chi need custom 404 and 405 handlers anyway, because the built-in ones answer in `text/plain`. |
+| D30 | Package layout: `backend/main.go` starts the server, `backend/internal/calc` holds the number model (parsing, arithmetic, rounding, formatting) and `backend/internal/api` holds the HTTP handlers. | It separates the arithmetic from HTTP and allows coverage per package (D34). `go run .` keeps working, and with a single binary a `cmd/` directory adds nothing. |
+| D31 | During development the Vite dev server proxies `/api` to the backend. The backend sends no CORS headers. | The browser sees one origin, so no CORS code is needed. A cross-origin `POST` with `Content-Type: application/json` triggers an `OPTIONS` preflight, which the API answers with `405`. |
+| D32 | `GET /healthz`, outside `/api/`, returns `200` with `{"status": "ok"}`. | Docker (Block 3) can check that the server is alive, and the rule that every path under `/api/` accepts only `POST` stays intact. |
+| D33 | The listen address comes from the environment variable `PRECIZZLE_ADDR`, `127.0.0.1:8080` by default. | It is the only setting D27 needs to vary. The prefix avoids clashes with other variables. |
+| D34 | CI fails when statement coverage drops below 95% in `internal/calc` or below 90% in `internal/api`. | It protects the arithmetic without forcing artificial tests of trivial code such as server startup. |
+| D35 | The request body is decoded strictly with `encoding/json/v2`: member names are case-sensitive (`"A"` is `unknown_field`), a duplicate member is `invalid_json`, and any data after the object is `invalid_json`. | `encoding/json` (v1) accepts `"A"` as `a` and keeps the last of two duplicate members. A client could send two values without knowing which one was used. In Go 1.27.3, v2 needs no experiment flag. |
+| D36 | The notation of a `decimal` is chosen from the value the API returns, after rounding. | The owner requires that a returned value reads the same when it is sent back in a later calculation. Choosing the notation before rounding wrote one value two ways: an approximate √(0.99…9 × 10⁻⁴⁰) gave `1e-20`, but sending that value back gave `0.00000000000000000001`. |
+| D37 | If package `calc` returns an error that the API does not map, the API logs the error and answers `500 internal_error` in Problem Details, with a generic detail and no `field`. | The owner wants an internal failure reported as one: never a crash, and never a math code that hides the bug. The cause stays in the server log, so the response reveals no implementation details. |
+| D38 | Paths that are not in clean form keep the standard `ServeMux` behavior: `307 Temporary Redirect` to the clean path. | The owner chose not to change the standard router behavior. A `307` keeps the method and the body, so following it reaches the right endpoint. CodeRabbit noted in PR #2 that the SPEC did not document it. |
 
 ## Out of scope
 

@@ -401,3 +401,228 @@ English translation:
 |---|---|---|
 | The limits "denominator ≤ 10¹⁰⁰⁰" and "≤ 1000 fractional digits" disagree for `1/2^1001` | Digits for terminating values, denominator for repeating ones | D24 |
 | D22 requires reduced fractions, but requests accept `4/2` | Apply the fix | D22 |
+
+---
+
+## 3. Block 1: Backend in Go
+
+### 3.1 Starting prompt
+
+Block plan: [docs/plans/block-1-backend-api.md](docs/plans/block-1-backend-api.md)
+
+Original (Spanish):
+
+> Quiero comenzar el Block 1 de Precizzle.
+>
+> Primero, revisá el master prompt, CLAUDE.md, docs/SPEC.md, los planes anteriores y el historial de Git para recuperar el contexto completo del proyecto.
+>
+> Confirmá que main esté actualizado y que no haya cambios pendientes. Después, prepará la rama feat/backend-api siguiendo nuestro flujo de trabajo.
+>
+> Quiero que empecemos con la entrevista técnica de este bloque. Investigá las alternativas necesarias, verificá sus características en la documentación oficial y presentame las decisiones que realmente requieren mi intervención, junto con tus recomendaciones y sus principales ventajas y desventajas.
+>
+> Prestá especial atención a la elección de la biblioteca matemática, considerando que decidimos conservar fracciones racionales exactas, distinguir resultados aproximados y evitar pérdidas silenciosas de precisión.
+>
+> Respetá todas las decisiones registradas en SPEC.md y no modifiques comportamientos previamente acordados sin consultarme.
+>
+> Una vez terminada la entrevista y aprobadas las decisiones, pasamos a Plan Mode para preparar el plan del bloque.
+>
+> Mantené los checkpoints establecidos y no comiences a implementar el backend hasta que apruebe el plan.
+
+English translation:
+
+> I want to start Block 1 of Precizzle.
+>
+> First, review the master prompt, CLAUDE.md, docs/SPEC.md, the previous plans and the Git history to recover the full context of the project.
+>
+> Confirm that main is up to date and that there are no pending changes. Then, prepare the feat/backend-api branch following our workflow.
+>
+> I want us to start with the technical interview for this block. Research the necessary alternatives, verify their features in the official documentation and present to me the decisions that really require my input, together with your recommendations and their main advantages and disadvantages.
+>
+> Pay special attention to the choice of the math library, considering that we decided to keep exact rational fractions, distinguish approximate results and avoid silent precision loss.
+>
+> Respect every decision recorded in SPEC.md and do not change previously agreed behaviors without asking me.
+>
+> Once the interview is over and the decisions are approved, we move to Plan Mode to prepare the block plan.
+>
+> Keep the established checkpoints and do not start implementing the backend until I approve the plan.
+
+### 3.2 Interview
+
+Before the questions, the assistant compared shopspring/decimal 1.6.0, cockroachdb/apd 3.2.3 and Go's `math/big` with a throwaway experiment (0.1 + 0.2, 1 ÷ 3 then × 3, 2 ^ −2, √2, 0 ^ −1 and 1 ÷ 3e30). Only `math/big` kept `1/3` exact. The results are summarized in D28.
+
+#### Round 1: math library, HTTP layer, development connection, layout
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| Which math base does the backend use? | Only math/big | D28 |
+| Which HTTP layer? | Standard net/http | D29 |
+| How does the frontend reach the API during development? | Vite proxy | D31 |
+| How are the backend packages organized? | main.go + internal/ | D30 |
+
+#### Round 2: health, configuration, coverage, JSON strictness
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| Which health endpoint? | GET /healthz outside /api | D32 |
+| What is configured through environment variables? | Only PRECIZZLE_ADDR | D33 |
+| What test coverage is required? | CI threshold: calc ≥ 95%, api ≥ 90% | D34 |
+| How strict is the JSON parser? | Strict with json/v2 | D35 |
+
+**Status:** The owner approved the decisions and the plan that contains them, including the contract clarifications: [docs/plans/block-1-backend-api.md](docs/plans/block-1-backend-api.md).
+
+### 3.3 Execution
+
+**Milestone 2 approval, canonical notation and performance.** Original (Spanish):
+
+> Perfecto, apruebo el Milestone 2 y las tres observaciones que presentaste.
+>
+> Estoy de acuerdo con incorporar la aclaración en SPEC.md sobre la representación canónica de los resultados redondeados. Quiero que la representación se determine siempre a partir del valor final que efectivamente devuelve la API, garantizando consistencia cuando ese mismo valor se reutiliza en operaciones posteriores.
+>
+> Respecto al rendimiento, considero aceptables los aproximadamente 80 ms del caso extremo. No hace falta introducir optimizaciones adicionales mientras las operaciones permanezcan correctamente acotadas y cumplan los límites establecidos.
+>
+> También estoy conforme con las correcciones de las dos expectativas matemáticas, siempre que estén respaldadas por las verificaciones independientes que realizaste.
+>
+> Podés avanzar con el Milestone 3 e implementar la capa HTTP, las rutas, la validación JSON, el manejo de errores y la configuración del servidor según el plan aprobado.
+>
+> Mantené las pruebas automatizadas y verificá que las respuestas de la API sean completamente consistentes con el motor matemático y con SPEC.md.
+>
+> Al terminar, presentame los resultados de las verificaciones y los cambios realizados antes de continuar.
+
+English translation:
+
+> Perfect, I approve Milestone 2 and the three observations you presented.
+>
+> I agree with adding the clarification to SPEC.md about the canonical representation of rounded results. I want the representation to always be determined from the final value that the API actually returns, guaranteeing consistency when that same value is reused in later operations.
+>
+> Regarding performance, I consider the roughly 80 ms of the extreme case acceptable. There is no need to introduce additional optimizations as long as the operations remain properly bounded and meet the established limits.
+>
+> I am also fine with the corrections of the two mathematical expectations, as long as they are backed by the independent verifications you performed.
+>
+> You can move on to Milestone 3 and implement the HTTP layer, the routes, the JSON validation, the error handling and the server configuration according to the approved plan.
+>
+> Keep the automated tests and verify that the API responses are fully consistent with the math engine and with SPEC.md.
+>
+> When you finish, present the results of the verifications and the changes made before continuing.
+
+**Status:** The notation rule is D36. The worst case of `power`, an approximate base of 1000 digits close to 1 raised to 1000, takes about 80 ms and is accepted without further optimization.
+
+**Milestone 3 approval, internal errors, the 422 example and path cleaning.** Original (Spanish):
+
+> Perfecto, apruebo el Milestone 3. Estoy conforme con los resultados de las pruebas y el funcionamiento de la API.
+>
+> Respecto a los tres puntos que presentaste:
+>
+> 1. Quiero modificar el manejo de errores inesperados. Si el motor matemático devuelve un error que la API no reconoce, prefiero que el servidor registre internamente el problema y devuelva una respuesta HTTP 500 Internal Server Error, siguiendo nuestro formato Problem Details. No quiero que se produzca un panic ni que se devuelva un código matemático incorrecto para ocultar un problema interno. La respuesta no debe exponer detalles sensibles de implementación. Incorporá una prueba específica para este caso y actualizá la SPEC si corresponde.
+>
+> 2. Apruebo la corrección del ejemplo HTTP 422 para que coincida con la respuesta real de Go. Mantené correctamente documentada la semántica del código.
+>
+> 3. Apruebo mantener el comportamiento estándar de ServeMux para las rutas que requieren normalización.
+>
+> Con estas condiciones, podés avanzar con el Milestone 4.
+>
+> Quiero que mantengamos las verificaciones automatizadas, los umbrales de cobertura y la consistencia entre la implementación y la documentación.
+>
+> Al finalizar, presentame los resultados de las pruebas y los cambios realizados antes de continuar.
+
+English translation:
+
+> Perfect, I approve Milestone 3. I am happy with the test results and how the API works.
+>
+> About the three points you presented:
+>
+> 1. I want to change how unexpected errors are handled. If the math engine returns an error that the API does not recognize, I prefer that the server records the problem internally and returns an HTTP 500 Internal Server Error response, following our Problem Details format. I do not want a panic, nor an incorrect math code returned to hide an internal problem. The response must not expose sensitive implementation details. Add a specific test for this case and update the SPEC if needed.
+>
+> 2. I approve correcting the HTTP 422 example to match Go's actual response. Keep the semantics of the code properly documented.
+>
+> 3. I approve keeping the standard ServeMux behavior for paths that need normalization.
+>
+> With these conditions, you can move on to Milestone 4.
+>
+> I want us to keep the automated checks, the coverage thresholds and the consistency between the implementation and the documentation.
+>
+> When you finish, present the test results and the changes made before continuing.
+
+**Status:** Point 1 is D37 (`500 internal_error`). Point 2 changed the 422 example in [docs/SPEC.md](docs/SPEC.md#errors) and explains that the status line text is informational. Point 3 needs no change: paths with `..` or `.` get the standard redirect of `ServeMux`.
+
+### 3.4 Pull request and review
+
+**Push, pull request and review instructions.** Original (Spanish):
+
+> Perfecto, apruebo el Milestone 4 y autorizo el push de la rama feat/backend-api y la creación de la Pull Request con el título y la descripción que propusiste.
+>
+> Estoy conforme con los resultados de las pruebas, las correcciones implementadas y la documentación.
+>
+> Quiero que prestemos especial atención a los controles de GitHub Actions, particularmente al detector de condiciones de carrera, que todavía no pudo ejecutarse localmente.
+>
+> Si alguno de los controles falla, investigá la causa y presentame el diagnóstico y la solución correspondiente antes de continuar.
+>
+> Una vez abierta la Pull Request, seguí el protocolo de CodeRabbit que establecimos. Verificá individualmente sus observaciones, reproducí los problemas cuando corresponda y presentame las recomendaciones clasificadas según su validez, importancia y solución propuesta.
+>
+> No apliques automáticamente las sugerencias de CodeRabbit sin mi aprobación.
+>
+> Cuando todas las verificaciones hayan terminado, mostrame el estado de la Pull Request, los resultados de GitHub Actions y la revisión de CodeRabbit.
+>
+> No realices el merge hasta que lo autorice expresamente.
+
+English translation:
+
+> Perfect, I approve Milestone 4 and authorize pushing the feat/backend-api branch and creating the Pull Request with the title and description you proposed.
+>
+> I am happy with the test results, the fixes implemented and the documentation.
+>
+> I want us to pay special attention to the GitHub Actions checks, particularly the race detector, which could not run locally yet.
+>
+> If any of the checks fails, investigate the cause and present the diagnosis and the corresponding solution to me before continuing.
+>
+> Once the Pull Request is open, follow the CodeRabbit protocol we established. Verify its observations one by one, reproduce the problems when it applies and present your recommendations classified by validity, importance and proposed solution.
+>
+> Do not apply CodeRabbit's suggestions automatically without my approval.
+>
+> When all the checks have finished, show me the state of the Pull Request, the GitHub Actions results and the CodeRabbit review.
+>
+> Do not merge until I explicitly authorize it.
+
+**Status:** The race detector ran in CI on Linux and found no races. CodeRabbit's first review showed that the test step ran without `pipefail`.
+
+#### CodeRabbit triage ([PR #2](https://github.com/msckell/precizzle/pull/2))
+
+| Finding | Selected answer | Final decision |
+|---|---|---|
+| The CI test step runs without `pipefail`, so `tee` can hide a failing `go test` | Apply the fix: `shell: bash` for the whole job | Commit `62eba5f` |
+| Unclean paths (`//`, `.`, `..`) get a `307` redirect instead of `not_found` | Keep the `ServeMux` behavior and document it, with a test | D38 |
+| Nitpick: the test of (1/3)^1000 checks only the ends of the decimal | Compare the full decimal and check the rounding conditions | Commit `99284d8` |
+| Nitpick: the exact benchmark case exits before the full power | Separate early rejections from full powers and check each result | Commit `de41dab` |
+
+**Fixes.** Original (Spanish):
+
+> Perfecto, revisé las cuatro observaciones de CodeRabbit y estoy de acuerdo con implementar las soluciones que propusiste.
+>
+> 1. Corregí la configuración de GitHub Actions para que cualquier fallo de los tests se detecte correctamente, incluso cuando se utiliza tee. Quiero que el CI nunca informe un resultado exitoso si alguna prueba falló.
+>
+> 2. Mantené el comportamiento estándar de ServeMux para las rutas no normalizadas y documentá correctamente las redirecciones 307 en la SPEC, sin modificar innecesariamente la implementación.
+>
+> 3. Mejorá el test de (1/3)^1000 para verificar la totalidad del resultado decimal, no solamente sus extremos. Utilizá una verificación independiente y comprobá también las condiciones matemáticas necesarias para el redondeo.
+>
+> 4. Corregí los benchmarks de potencias para distinguir claramente entre las operaciones rechazadas anticipadamente y aquellas que realmente ejecutan el cálculo completo. Quiero que los benchmarks representen fielmente lo que están midiendo y verifiquen la corrección de sus resultados.
+>
+> Aplicá cada corrección en su propio commit, ejecutá las verificaciones correspondientes y mostrame los resultados.
+>
+> Después, presentame el estado actualizado del CI y de CodeRabbit antes de continuar con el cierre de la Pull Request.
+
+English translation:
+
+> Perfect, I reviewed the four CodeRabbit observations and I agree with implementing the solutions you proposed.
+>
+> 1. Fix the GitHub Actions configuration so that any test failure is detected correctly, even when tee is used. I want CI to never report success if any test failed.
+>
+> 2. Keep the standard ServeMux behavior for unclean paths and document the 307 redirects properly in the SPEC, without changing the implementation unnecessarily.
+>
+> 3. Improve the test of (1/3)^1000 to check the whole decimal result, not only its ends. Use an independent check and also verify the mathematical conditions needed for the rounding.
+>
+> 4. Fix the power benchmarks to clearly separate the operations rejected early from those that really run the full calculation. I want the benchmarks to faithfully represent what they measure and to check that their results are correct.
+>
+> Apply each fix in its own commit, run the corresponding checks and show me the results.
+>
+> Then, present the updated state of CI and CodeRabbit before continuing with closing the Pull Request.
+
+**Status:** The exact full-power case takes about 76 ms, the same order as the approximate one accepted in 3.3. After the replies on both threads, CodeRabbit approved the pull request.
