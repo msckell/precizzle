@@ -1,0 +1,20 @@
+# Go
+*.exe
+*.test
+*.out
+coverage.html
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# Environment
+.env
+.env.*
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

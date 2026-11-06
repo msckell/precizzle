@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+
+reviews:
+  profile: chill
+  auto_approvals:
+    enabled: true
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+  path_instructions:
+    - path: "backend/**/*.go"
+      instructions: |
+        Idiomatic Go, formatted with gofmt and clean under go vet.
+        No binary floating point (float32, float64, strconv.ParseFloat, JSON numbers decoded into float64) anywhere in the calculation path.
+        HTTP input is validated at the handler boundary; internal packages trust their inputs.
+        Every error response follows the error format in docs/SPEC.md.
+    - path: "frontend/**/*.{ts,tsx}"
+      instructions: |
+        TypeScript strict mode, ESLint and Prettier clean.
+        Operands and results stay strings end to end: never pass them through Number, parseFloat, parseInt or arithmetic.
+        User input is validated before calling the API, and backend errors are shown clearly.
+        Check accessibility: labels for screen readers and visible focus.
+    - path: "**/*_test.go"
+      instructions: |
+        Tests are table-driven and check real behavior, including the edge cases listed in docs/SPEC.md.
+        Flag hardcoded values that only make a test pass, and assertions that are weaker than the behavior they claim to cover.
+    - path: "frontend/**/*.test.{ts,tsx}"
+      instructions: |
+        Tests check user-visible behavior with React Testing Library, not implementation details.
+        The API is mocked at the network boundary. Flag assertions that are weaker than the behavior they claim to cover.
