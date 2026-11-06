@@ -26,6 +26,8 @@ Full text: [docs/prompts/00-master-prompt.md](docs/prompts/00-master-prompt.md)
 
 Section 11 of the master prompt: "Start Block 0 now: save this prompt as described, check the environment and prepare the initial commit for my review."
 
+Block plan: [docs/plans/block-0-foundation.md](docs/plans/block-0-foundation.md)
+
 ### 2.2 Interview
 
 #### Round 1: interaction model, JSON numbers, errors, contract
@@ -302,3 +304,57 @@ The assistant proposed this model: each result has a `value` (exact `0.25` or `1
 | Decimals returned for repeating results | 100 decimals | D24 |
 
 **Status:** The owner approved the plan that contains these decisions: [docs/plans/block-0-foundation.md](docs/plans/block-0-foundation.md).
+
+### 2.5 Execution
+
+**Milestone 1 approval and test expectations.** Original (Spanish):
+
+> Perfecto, apruebo el Milestone 1 y las correcciones que incorporaste.
+>
+> Quiero que mantengamos la consistencia entre la especificación, el contrato de la API y el comportamiento real de la aplicación.
+>
+> Cuando implementemos las operaciones matemáticas, asegurate de verificar mediante pruebas automatizadas los casos que definimos en SPEC.md, especialmente la conservación de fracciones exactas, el encadenamiento de operaciones, los resultados aproximados y los números extremadamente pequeños.
+>
+> Podés avanzar con el Milestone 2 y preparar el esqueleto del backend en Go siguiendo el plan aprobado.
+>
+> Respetá los checkpoints establecidos y mostrame los resultados de las verificaciones antes de continuar al siguiente milestone.
+
+English translation:
+
+> Perfect, I approve Milestone 1 and the corrections you made.
+>
+> I want us to keep the specification, the API contract and the actual behavior of the application consistent.
+>
+> When we implement the mathematical operations, make sure to verify with automated tests the cases we defined in SPEC.md, especially the preservation of exact fractions, the chaining of operations, approximate results and extremely small numbers.
+>
+> You can move on to Milestone 2 and prepare the Go backend skeleton following the approved plan.
+>
+> Respect the established checkpoints and show me the results of the verifications before continuing to the next milestone.
+
+**Status:** Applies to Block 1, where the arithmetic is implemented. Every row of the examples and errors tables in [docs/SPEC.md](docs/SPEC.md) becomes a test case.
+
+**Milestone 2 approval and the listen address.** Original (Spanish):
+
+> Perfecto, apruebo el Milestone 2. Las verificaciones están correctas y podemos continuar.
+>
+> Quiero hacer una pequeña aclaración sobre el servidor: durante el desarrollo local, prefiero que escuche únicamente en 127.0.0.1:8080, en lugar de quedar accesible desde todas las interfaces de red. Cuando lleguemos a Docker, podemos configurar la dirección según las necesidades del entorno.
+>
+> Fuera de eso, estoy conforme con lo implementado.
+>
+> Podés avanzar con el Milestone 3 y preparar el esqueleto del frontend con React, TypeScript, Vite, ESLint, Prettier y Vitest, siguiendo el plan aprobado.
+>
+> Al finalizar, mostrame los archivos creados y los resultados de las pruebas, compilación y verificaciones correspondientes.
+
+English translation:
+
+> Perfect, I approve Milestone 2. The verifications are correct and we can continue.
+>
+> I want to make a small clarification about the server: during local development, I prefer it to listen only on 127.0.0.1:8080, instead of being reachable from every network interface. When we get to Docker, we can configure the address according to the needs of the environment.
+>
+> Other than that, I'm happy with what was implemented.
+>
+> You can move on to Milestone 3 and prepare the frontend skeleton with React, TypeScript, Vite, ESLint, Prettier and Vitest, following the approved plan.
+>
+> When you finish, show me the files created and the results of the tests, the build and the corresponding verifications.
+
+**Status:** Final: D27.
