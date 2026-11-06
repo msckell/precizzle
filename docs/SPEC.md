@@ -172,7 +172,7 @@ Every row was checked with exact rational arithmetic. Errors:
 | `POST /api/v1/percentage` | `{"percent", "base"?, "operator"?}` | the rules in [Operations](#operations) | `missing_field` (`base` without `operator` or the reverse), `invalid_operator`, `division_by_zero` (`divide` with a percent of 0) |
 
 - In `percentage`, `operator` is one of `add`, `subtract`, `multiply` or `divide`.
-- Every endpoint can also return `invalid_json`, `missing_field`, `unknown_field`, `invalid_number`, `operand_out_of_range`, `result_too_large` and `result_too_precise`.
+- Every endpoint can also return `invalid_json`, `missing_field`, `unknown_field`, `invalid_number`, `operand_out_of_range`, `result_too_large`, `result_too_precise` and, if the server has a bug, `internal_error`.
 
 ### Health
 
@@ -261,7 +261,7 @@ Request errors name the field they are about. Calculation errors use these field
 Example:
 
 ```http
-HTTP/1.1 422 Unprocessable Content
+HTTP/1.1 422 Unprocessable Entity
 Content-Type: application/problem+json
 
 {
@@ -274,7 +274,9 @@ Content-Type: application/problem+json
 }
 ```
 
-`400` means the request is wrong and the client must fix it. `422` means the request is well formed, but the result does not exist or cannot be represented (D17).
+The text after the status code in the status line is informational, and clients rely only on the code. Go writes `422 Unprocessable Entity`, the name from RFC 4918; RFC 9110 renamed it `Unprocessable Content` with the same meaning.
+
+`400` means the request is wrong and the client must fix it. `422` means the request is well formed, but the result does not exist or cannot be represented (D17). `500` means the server failed, whatever the request (D37).
 
 | Code | Status | Title | When |
 |---|---|---|---|
@@ -294,6 +296,7 @@ Content-Type: application/problem+json
 | <a id="method_not_allowed"></a>`method_not_allowed` | 405 | Method not allowed | The path exists, but not for this method: the operations accept only `POST`, and `/healthz` accepts `GET` and `HEAD`. The `Allow` header lists the accepted methods. |
 | <a id="payload_too_large"></a>`payload_too_large` | 413 | Payload too large | The body is larger than 64 KiB. |
 | <a id="unsupported_media_type"></a>`unsupported_media_type` | 415 | Unsupported media type | `Content-Type` is missing, or its media type is not `application/json`. |
+| <a id="internal_error"></a>`internal_error` | 500 | Internal error | The calculation failed in a way the API does not expect, which is a bug in the server. The response gives no cause; the server records it in its log (D37). |
 
 When a request has several problems, the API reports only the first one, checked in this order:
 
@@ -306,7 +309,7 @@ When a request has several problems, the API reports only the first one, checked
 7. Operand syntax, field by field in that same order. In `percentage`, `operator` is checked here as well, after `percent` and `base`. A field that is not a JSON string is `invalid_number`, or `invalid_operator` for `operator`.
 8. Operand limits, field by field.
 9. Exponent rules.
-10. The calculation itself.
+10. The calculation itself, including `internal_error`.
 
 ## Decisions log
 
@@ -355,6 +358,7 @@ When a request has several problems, the API reports only the first one, checked
 | D34 | CI fails when statement coverage drops below 95% in `internal/calc` or below 90% in `internal/api`. | It protects the arithmetic without forcing artificial tests of trivial code such as server startup. |
 | D35 | The request body is decoded strictly with `encoding/json/v2`: member names are case-sensitive (`"A"` is `unknown_field`), a duplicate member is `invalid_json`, and any data after the object is `invalid_json`. | `encoding/json` (v1) accepts `"A"` as `a` and keeps the last of two duplicate members. A client could send two values without knowing which one was used. In Go 1.27.3, v2 needs no experiment flag. |
 | D36 | The notation of a `decimal` is chosen from the value the API returns, after rounding. | The owner requires that a returned value reads the same when it is sent back in a later calculation. Choosing the notation before rounding wrote one value two ways: an approximate √(0.99…9 × 10⁻⁴⁰) gave `1e-20`, but sending that value back gave `0.00000000000000000001`. |
+| D37 | If package `calc` returns an error that the API does not map, the API logs the error and answers `500 internal_error` in Problem Details, with a generic detail and no `field`. | The owner wants an internal failure reported as one: never a crash, and never a math code that hides the bug. The cause stays in the server log, so the response reveals no implementation details. |
 
 ## Out of scope
 
