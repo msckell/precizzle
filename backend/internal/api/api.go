@@ -25,8 +25,17 @@ func NewHandler() http.Handler {
 		// one only receives the other methods.
 		mux.Handle(path, methodNotAllowed("POST"))
 	}
+	mux.HandleFunc("GET /healthz", health)
+	mux.Handle("/healthz", methodNotAllowed("GET, HEAD"))
 	mux.HandleFunc("/", notFound)
 	return mux
+}
+
+// health reports that the server is up (D32). The GET pattern also serves HEAD.
+func health(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, "application/json", http.StatusOK, struct {
+		Status string `json:"status"`
+	}{"ok"})
 }
 
 // methodNotAllowed answers a request whose path exists but whose method does not.
