@@ -358,3 +358,46 @@ English translation:
 > When you finish, show me the files created and the results of the tests, the build and the corresponding verifications.
 
 **Status:** Final: D27.
+
+### 2.6 Pull request and review
+
+**Push, pull request and review instructions.** Original (Spanish):
+
+> Perfecto, apruebo el push de la rama chore/foundation y la creación de la Pull Request con el título y la descripción que propusiste.
+>
+> Antes de publicar, verificá que no haya archivos temporales, credenciales ni información sensible incluidos accidentalmente.
+>
+> Respecto a la vulnerabilidad de minimatch, mantenela documentada y verificá si existe alguna solución compatible con nuestras dependencias, sin introducir cambios que comprometan la estabilidad del proyecto.
+>
+> Una vez abierta la Pull Request, seguí el protocolo de revisión de CodeRabbit que establecimos.
+>
+> Quiero que analices y verifiques cada observación antes de presentármela, distinguiendo los problemas reales de las recomendaciones opcionales.
+>
+> Mostrame el resultado de la revisión y las correcciones que proponés antes de aplicarlas, respetando los checkpoints acordados.
+>
+> Podés continuar.
+
+English translation:
+
+> Perfect, I approve pushing the chore/foundation branch and creating the Pull Request with the title and description you proposed.
+>
+> Before publishing, check that no temporary files, credentials or sensitive information were included by accident.
+>
+> About the minimatch vulnerability, keep it documented and check whether there is a solution compatible with our dependencies, without introducing changes that compromise the stability of the project.
+>
+> Once the Pull Request is open, follow the CodeRabbit review protocol we established.
+>
+> I want you to analyze and verify each observation before presenting it to me, distinguishing real problems from optional recommendations.
+>
+> Show me the result of the review and the fixes you propose before applying them, respecting the agreed checkpoints.
+>
+> You can continue.
+
+**Status:** No patched `minimatch` 10.x exists. An npm override to version 11 would go outside ESLint's supported range, so the advisory is documented in the README under "Known issues".
+
+#### CodeRabbit triage ([PR #1](https://github.com/msckell/precizzle/pull/1))
+
+| Finding | Selected answer | Final decision |
+|---|---|---|
+| The limits "denominator ≤ 10¹⁰⁰⁰" and "≤ 1000 fractional digits" disagree for `1/2^1001` | Digits for terminating values, denominator for repeating ones | D24 |
+| D22 requires reduced fractions, but requests accept `4/2` | Apply the fix | D22 |
