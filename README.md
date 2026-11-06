@@ -35,6 +35,14 @@ npm run dev         # start the dev server
 
 The API has no endpoints yet; Block 1 adds them.
 
+### Known issues
+
+- `npm audit` in `frontend/` reports a moderate advisory in `minimatch` ([GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249), a denial of service through crafted glob patterns, fixed in 11.0.1).
+  - It reaches the project only through ESLint and typescript-eslint, which are development tools: it is not part of the built app, and the only glob patterns it processes are the project's own lint configuration.
+  - ESLint 10.14 and typescript-eslint 8.72 require `minimatch` 10, and no patched 10.x release exists.
+  - Forcing version 11 with npm `overrides` works in a local test, but it goes outside the versions ESLint supports, so it is not applied.
+  - The advisory goes away when ESLint moves to `minimatch` 11.
+
 ## Design decisions
 
 The full list, with the reason for each decision, is in the [decisions log](docs/SPEC.md#decisions-log). The main ones:
