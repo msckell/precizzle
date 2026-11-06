@@ -24,6 +24,7 @@ const (
 	codeMethodNotAllowed     = "method_not_allowed"
 	codePayloadTooLarge      = "payload_too_large"
 	codeUnsupportedMediaType = "unsupported_media_type"
+	codeInternalError        = "internal_error"
 )
 
 // problemTypeBase is the start of every problem type URI. The code is the
@@ -51,6 +52,7 @@ var problemTypes = map[string]struct {
 	codeMethodNotAllowed:     {http.StatusMethodNotAllowed, "Method not allowed"},
 	codePayloadTooLarge:      {http.StatusRequestEntityTooLarge, "Payload too large"},
 	codeUnsupportedMediaType: {http.StatusUnsupportedMediaType, "Unsupported media type"},
+	codeInternalError:        {http.StatusInternalServerError, "Internal error"},
 }
 
 // problem is one occurrence of an error: its code, a human-readable detail

@@ -5,6 +5,7 @@ import (
 	"encoding/json/v2"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/msckell/precizzle/backend/internal/calc"
@@ -216,5 +217,9 @@ func calcProblem(err error, specific failures) *problem {
 	case errors.Is(err, calc.ErrResultTooPrecise):
 		return &problem{code: codeResultTooPrecise, detail: "The result needs more digits than the limits allow."}
 	}
-	panic(fmt.Sprintf("api: unexpected error from calc: %v", err))
+	// An error the API does not know is a bug, not a property of the request.
+	// The cause goes to the server log only, so the response reveals nothing
+	// about the implementation.
+	log.Printf("api: unexpected error from calc: %v", err)
+	return &problem{code: codeInternalError, detail: "The server could not complete the calculation."}
 }

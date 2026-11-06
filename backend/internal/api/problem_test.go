@@ -55,6 +55,7 @@ func TestWriteProblem(t *testing.T) {
 		{codeMethodNotAllowed, http.StatusMethodNotAllowed, "Method not allowed"},
 		{codePayloadTooLarge, http.StatusRequestEntityTooLarge, "Payload too large"},
 		{codeUnsupportedMediaType, http.StatusUnsupportedMediaType, "Unsupported media type"},
+		{codeInternalError, http.StatusInternalServerError, "Internal error"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.code, func(t *testing.T) {
