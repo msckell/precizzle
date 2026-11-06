@@ -158,6 +158,7 @@ Every row was checked with exact rational arithmetic. Errors:
 - A success is `200` with `Content-Type: application/json` and the body `{"value": "...", "decimal": "...", "kind": "..."}` (D21).
 - An error uses RFC 9457 Problem Details with `Content-Type: application/problem+json` (D5). See [Errors](#errors).
 - The API is stateless and has no authentication.
+- A path that is not in clean form, with an empty segment (`//`) or a `.` or `..` segment, gets `307 Temporary Redirect` with a `Location` header that holds the clean path, for example `/api/v1//add` to `/api/v1/add` (D38). It is the standard behavior of Go's `ServeMux`. A `307` keeps the method and the body, so a client that follows it sends the same request to the clean path. The redirect is not a Problem Details response.
 
 ### Endpoints
 
@@ -300,7 +301,7 @@ The text after the status code in the status line is informational, and clients 
 
 When a request has several problems, the API reports only the first one, checked in this order:
 
-1. Path and method.
+1. Path and method. A path that is not in clean form is redirected before this check (see [Conventions](#conventions)).
 2. Media type.
 3. Body size.
 4. JSON syntax.
@@ -359,6 +360,7 @@ When a request has several problems, the API reports only the first one, checked
 | D35 | The request body is decoded strictly with `encoding/json/v2`: member names are case-sensitive (`"A"` is `unknown_field`), a duplicate member is `invalid_json`, and any data after the object is `invalid_json`. | `encoding/json` (v1) accepts `"A"` as `a` and keeps the last of two duplicate members. A client could send two values without knowing which one was used. In Go 1.27.3, v2 needs no experiment flag. |
 | D36 | The notation of a `decimal` is chosen from the value the API returns, after rounding. | The owner requires that a returned value reads the same when it is sent back in a later calculation. Choosing the notation before rounding wrote one value two ways: an approximate √(0.99…9 × 10⁻⁴⁰) gave `1e-20`, but sending that value back gave `0.00000000000000000001`. |
 | D37 | If package `calc` returns an error that the API does not map, the API logs the error and answers `500 internal_error` in Problem Details, with a generic detail and no `field`. | The owner wants an internal failure reported as one: never a crash, and never a math code that hides the bug. The cause stays in the server log, so the response reveals no implementation details. |
+| D38 | Paths that are not in clean form keep the standard `ServeMux` behavior: `307 Temporary Redirect` to the clean path. | The owner chose not to change the standard router behavior. A `307` keeps the method and the body, so following it reaches the right endpoint. CodeRabbit noted in PR #2 that the SPEC did not document it. |
 
 ## Out of scope
 

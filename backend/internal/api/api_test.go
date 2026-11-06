@@ -219,6 +219,31 @@ func TestErrors(t *testing.T) {
 	}
 }
 
+// TestUncleanPathsRedirect pins the standard ServeMux redirect documented in docs/SPEC.md (D38).
+func TestUncleanPathsRedirect(t *testing.T) {
+	tests := []struct {
+		method string
+		path   string
+		want   string
+	}{
+		{http.MethodPost, "/api/v1//add", "/api/v1/add"},
+		{http.MethodPost, "/api/v1/./add", "/api/v1/add"},
+		{http.MethodPost, "/api/v1/x/../add", "/api/v1/add"},
+		{http.MethodGet, "//healthz", "/healthz"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.method+" "+tt.path, func(t *testing.T) {
+			rec := serve(t, tt.method, tt.path, `{"a": "1", "b": "2"}`)
+			if rec.Code != http.StatusTemporaryRedirect {
+				t.Errorf("status = %d, want 307", rec.Code)
+			}
+			if got := rec.Header().Get("Location"); got != tt.want {
+				t.Errorf("Location = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestUnsupportedMediaType(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/add", strings.NewReader(`{"a": "1", "b": "2"}`))
 	req.Header.Set("Content-Type", "text/plain")
