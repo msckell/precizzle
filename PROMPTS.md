@@ -505,3 +505,41 @@ English translation:
 > When you finish, present the results of the verifications and the changes made before continuing.
 
 **Status:** The notation rule is D36. The worst case of `power`, an approximate base of 1000 digits close to 1 raised to 1000, takes about 80 ms and is accepted without further optimization.
+
+**Milestone 3 approval, internal errors, the 422 example and path cleaning.** Original (Spanish):
+
+> Perfecto, apruebo el Milestone 3. Estoy conforme con los resultados de las pruebas y el funcionamiento de la API.
+>
+> Respecto a los tres puntos que presentaste:
+>
+> 1. Quiero modificar el manejo de errores inesperados. Si el motor matemático devuelve un error que la API no reconoce, prefiero que el servidor registre internamente el problema y devuelva una respuesta HTTP 500 Internal Server Error, siguiendo nuestro formato Problem Details. No quiero que se produzca un panic ni que se devuelva un código matemático incorrecto para ocultar un problema interno. La respuesta no debe exponer detalles sensibles de implementación. Incorporá una prueba específica para este caso y actualizá la SPEC si corresponde.
+>
+> 2. Apruebo la corrección del ejemplo HTTP 422 para que coincida con la respuesta real de Go. Mantené correctamente documentada la semántica del código.
+>
+> 3. Apruebo mantener el comportamiento estándar de ServeMux para las rutas que requieren normalización.
+>
+> Con estas condiciones, podés avanzar con el Milestone 4.
+>
+> Quiero que mantengamos las verificaciones automatizadas, los umbrales de cobertura y la consistencia entre la implementación y la documentación.
+>
+> Al finalizar, presentame los resultados de las pruebas y los cambios realizados antes de continuar.
+
+English translation:
+
+> Perfect, I approve Milestone 3. I am happy with the test results and how the API works.
+>
+> About the three points you presented:
+>
+> 1. I want to change how unexpected errors are handled. If the math engine returns an error that the API does not recognize, I prefer that the server records the problem internally and returns an HTTP 500 Internal Server Error response, following our Problem Details format. I do not want a panic, nor an incorrect math code returned to hide an internal problem. The response must not expose sensitive implementation details. Add a specific test for this case and update the SPEC if needed.
+>
+> 2. I approve correcting the HTTP 422 example to match Go's actual response. Keep the semantics of the code properly documented.
+>
+> 3. I approve keeping the standard ServeMux behavior for paths that need normalization.
+>
+> With these conditions, you can move on to Milestone 4.
+>
+> I want us to keep the automated checks, the coverage thresholds and the consistency between the implementation and the documentation.
+>
+> When you finish, present the test results and the changes made before continuing.
+
+**Status:** Point 1 is D37 (`500 internal_error`). Point 2 changed the 422 example in [docs/SPEC.md](docs/SPEC.md#errors) and explains that the status line text is informational. Point 3 needs no change: paths with `..` or `.` get the standard redirect of `ServeMux`.
