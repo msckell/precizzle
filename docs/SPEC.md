@@ -152,7 +152,8 @@ Every row was checked with exact rational arithmetic. Errors:
 ### Conventions
 
 - Every operation is `POST /api/v1/{operation}` (D14).
-- The request has `Content-Type: application/json` and a body of at most 64 KiB. The body is a JSON object whose fields are strings (D4). Unknown fields are rejected, and `null` counts as a missing field.
+- The request has `Content-Type: application/json` and a body of at most 64 KiB. Media type parameters are allowed, so `application/json; charset=utf-8` is accepted. The body is a JSON object whose fields are strings (D4). Unknown fields are rejected, and `null` counts as a missing field.
+- The body is decoded strictly (D35). Member names are case-sensitive, so `"A"` is an unknown field. A duplicate member, invalid UTF-8 or any data after the object is `invalid_json`.
 - A success is `200` with `Content-Type: application/json` and the body `{"value": "...", "decimal": "...", "kind": "..."}` (D21).
 - An error uses RFC 9457 Problem Details with `Content-Type: application/problem+json` (D5). See [Errors](#errors).
 - The API is stateless and has no authentication.
@@ -171,6 +172,10 @@ Every row was checked with exact rational arithmetic. Errors:
 
 - In `percentage`, `operator` is one of `add`, `subtract`, `multiply` or `divide`.
 - Every endpoint can also return `invalid_json`, `missing_field`, `unknown_field`, `invalid_number`, `operand_out_of_range`, `result_too_large` and `result_too_precise`.
+
+### Health
+
+`GET /healthz` returns `200` with `Content-Type: application/json` and the body `{"status": "ok"}` (D32). It sits outside `/api/`, so the rule that every path under `/api/` accepts only `POST` has no exception. `HEAD /healthz` returns the same status and headers without a body. Any other method returns `method_not_allowed` with `Allow: GET, HEAD`.
 
 ### Examples
 
@@ -241,6 +246,17 @@ Every error is a Problem Details object (RFC 9457) with these members:
 | `code` | A stable, machine-readable code (extension member) |
 | `field` | The request field at fault, when there is one (extension member) |
 
+Request errors name the field they are about. Calculation errors use these fields:
+
+| Error | `field` |
+|---|---|
+| `division_by_zero` in `divide` | `b` |
+| `division_by_zero` in `percentage` | `percent` |
+| `division_by_zero` in `power` (0 raised to a negative exponent) | `base` |
+| `negative_square_root` | `value` |
+| `exponent_not_integer`, `exponent_out_of_range` | `exponent` |
+| `result_too_large`, `result_too_precise` | none |
+
 Example:
 
 ```http
@@ -261,24 +277,35 @@ Content-Type: application/problem+json
 
 | Code | Status | Title | When |
 |---|---|---|---|
-| <a id="invalid_json"></a>`invalid_json` | 400 | Invalid JSON | The body is not a single valid JSON object. |
+| <a id="invalid_json"></a>`invalid_json` | 400 | Invalid JSON | The body is not a single valid JSON object: a syntax error, invalid UTF-8, a duplicate member, data after the object, or a top-level value that is not an object. |
 | <a id="missing_field"></a>`missing_field` | 400 | Missing field | A required field is absent or `null`, or `percentage` has `base` without `operator` or the reverse. |
-| <a id="unknown_field"></a>`unknown_field` | 400 | Unknown field | The body has a field that the endpoint does not define. |
+| <a id="unknown_field"></a>`unknown_field` | 400 | Unknown field | The body has a field that the endpoint does not define. Names are case-sensitive. |
 | <a id="invalid_number"></a>`invalid_number` | 400 | Invalid number | A number field is not a JSON string, or the string does not match the [operand syntax](#operand-syntax). |
 | <a id="operand_out_of_range"></a>`operand_out_of_range` | 400 | Operand out of range | An operand is outside the [limits](#limits). |
 | <a id="exponent_not_integer"></a>`exponent_not_integer` | 400 | Exponent not integer | The exponent is not an exact integer. |
 | <a id="exponent_out_of_range"></a>`exponent_out_of_range` | 400 | Exponent out of range | The exponent is below −1000 or above 1000. |
-| <a id="invalid_operator"></a>`invalid_operator` | 400 | Invalid operator | `operator` is not `add`, `subtract`, `multiply` or `divide`. |
+| <a id="invalid_operator"></a>`invalid_operator` | 400 | Invalid operator | `operator` is not one of the JSON strings `add`, `subtract`, `multiply` or `divide`. |
 | <a id="division_by_zero"></a>`division_by_zero` | 422 | Division by zero | The divisor is zero: `b` in `divide`, a percent of 0 with `divide`, or 0 raised to a negative exponent. |
 | <a id="negative_square_root"></a>`negative_square_root` | 422 | Negative square root | `sqrt` received a negative value. |
 | <a id="result_too_large"></a>`result_too_large` | 422 | Result too large | \|result\| ≥ 10⁴⁰. |
 | <a id="result_too_precise"></a>`result_too_precise` | 422 | Result too precise | An exact terminating result needs more than 1000 fractional digits, an exact repeating result has a reduced denominator above 10¹⁰⁰⁰, or a non-zero approximate result would round to 0 at 1000 fractional digits. |
-| <a id="not_found"></a>`not_found` | 404 | Not found | No endpoint exists at the path under `/api/`. |
-| <a id="method_not_allowed"></a>`method_not_allowed` | 405 | Method not allowed | The path exists, but the method is not `POST`. The response includes `Allow: POST`. |
+| <a id="not_found"></a>`not_found` | 404 | Not found | No endpoint exists at the path. |
+| <a id="method_not_allowed"></a>`method_not_allowed` | 405 | Method not allowed | The path exists, but not for this method: the operations accept only `POST`, and `/healthz` accepts `GET` and `HEAD`. The `Allow` header lists the accepted methods. |
 | <a id="payload_too_large"></a>`payload_too_large` | 413 | Payload too large | The body is larger than 64 KiB. |
-| <a id="unsupported_media_type"></a>`unsupported_media_type` | 415 | Unsupported media type | `Content-Type` is not `application/json`. |
+| <a id="unsupported_media_type"></a>`unsupported_media_type` | 415 | Unsupported media type | `Content-Type` is missing, or its media type is not `application/json`. |
 
-When a request has several problems, the API reports only the first one, checked in this order: path and method, media type, body size, JSON syntax, unknown fields, missing fields, operand syntax, operand limits, exponent rules, and then the calculation itself.
+When a request has several problems, the API reports only the first one, checked in this order:
+
+1. Path and method.
+2. Media type.
+3. Body size.
+4. JSON syntax.
+5. Unknown fields, the first one in document order.
+6. Missing fields, in the order the [endpoint table](#endpoints) lists them.
+7. Operand syntax, field by field in that same order. In `percentage`, `operator` is checked here as well, after `percent` and `base`. A field that is not a JSON string is `invalid_number`, or `invalid_operator` for `operator`.
+8. Operand limits, field by field.
+9. Exponent rules.
+10. The calculation itself.
 
 ## Decisions log
 
