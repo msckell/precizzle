@@ -1,29 +1,23 @@
 package main
 
-import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
-)
+import "testing"
 
-func TestUnknownPathReturnsNotFound(t *testing.T) {
+func TestListenAddr(t *testing.T) {
 	tests := []struct {
-		name   string
-		method string
-		path   string
+		name string
+		env  map[string]string
+		want string
 	}{
-		{name: "root", method: http.MethodGet, path: "/"},
-		{name: "unknown path", method: http.MethodPost, path: "/unknown"},
+		{name: "default", env: map[string]string{}, want: "127.0.0.1:8080"},
+		{name: "empty variable", env: map[string]string{"PRECIZZLE_ADDR": ""}, want: "127.0.0.1:8080"},
+		{name: "custom port", env: map[string]string{"PRECIZZLE_ADDR": "127.0.0.1:8081"}, want: "127.0.0.1:8081"},
+		{name: "all interfaces", env: map[string]string{"PRECIZZLE_ADDR": "0.0.0.0:8080"}, want: "0.0.0.0:8080"},
 	}
-
-	handler := newHandler()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rec := httptest.NewRecorder()
-			handler.ServeHTTP(rec, httptest.NewRequest(tt.method, tt.path, nil))
-
-			if rec.Code != http.StatusNotFound {
-				t.Errorf("%s %s: status = %d, want %d", tt.method, tt.path, rec.Code, http.StatusNotFound)
+			getenv := func(key string) string { return tt.env[key] }
+			if got := listenAddr(getenv); got != tt.want {
+				t.Errorf("listenAddr = %q, want %q", got, tt.want)
 			}
 		})
 	}
