@@ -1,0 +1,115 @@
+package calc
+
+import (
+	"math/big"
+	"strings"
+	"testing"
+)
+
+func TestPower(t *testing.T) {
+	fiveTo1000 := new(big.Int).Exp(big.NewInt(5), big.NewInt(1000), nil).String()
+	twoToMinus1000 := Result{
+		Value:   "0." + strings.Repeat("0", 1000-len(fiveTo1000)) + fiveTo1000,
+		Decimal: fiveTo1000[:1] + "." + strings.TrimRight(fiveTo1000[1:], "0") + "e-302",
+		Kind:    Exact,
+	}
+	oneAnd1000Digits := "1." + strings.Repeat("0", 999) + "1"
+
+	runBinary(t, Power, []binaryCase{
+		{name: "2 ^ -2", a: "2", b: "-2", want: Result{"0.25", "0.25", Exact}},
+		{name: "3 ^ -1", a: "3", b: "-1", want: Result{"1/3", "0." + strings.Repeat("3", 100), Repeating}},
+		{name: "0 ^ 0", a: "0", b: "0", want: Result{"1", "1", Exact}},
+		{name: "0 ^ 5", a: "0", b: "5", want: Result{"0", "0", Exact}},
+		{name: "0 ^ -1", a: "0", b: "-1", wantErr: ErrDivisionByZero},
+		{name: "approximate 0 ^ 0", a: "~0", b: "0", want: Result{"~1", "1", Approximate}},
+		{name: "negative base, odd exponent", a: "-2", b: "3", want: Result{"-8", "-8", Exact}},
+		{name: "negative base, even exponent", a: "-2", b: "2", want: Result{"4", "4", Exact}},
+		{name: "negative fraction, negative exponent", a: "-1/2", b: "-3", want: Result{"-8", "-8", Exact}},
+		{name: "(1/3) ^ -2", a: "1/3", b: "-2", want: Result{"9", "9", Exact}},
+		{name: "exponent 2.0", a: "2", b: "2.0", want: Result{"4", "4", Exact}},
+		{name: "exponent 4/2", a: "2", b: "4/2", want: Result{"4", "4", Exact}},
+		{name: "exponent 1e2", a: "2", b: "1e2", want: Result{"1267650600228229401496703205376", "1267650600228229401496703205376", Exact}},
+		{name: "exponent 2.5", a: "2", b: "2.5", wantErr: ErrExponentNotInteger},
+		{name: "exponent 1/2", a: "4", b: "1/2", wantErr: ErrExponentNotInteger},
+		{name: "approximate exponent", a: "2", b: "~2", wantErr: ErrExponentNotInteger},
+		{name: "exponent 1000", a: "1", b: "1000", want: Result{"1", "1", Exact}},
+		{name: "exponent -1000", a: "-1", b: "-1000", want: Result{"1", "1", Exact}},
+		{name: "2 ^ 1001", a: "2", b: "1001", wantErr: ErrExponentOutOfRange},
+		{name: "2 ^ -1001", a: "2", b: "-1001", wantErr: ErrExponentOutOfRange},
+		{name: "1.0001 ^ -2000", a: "1.0001", b: "-2000", wantErr: ErrExponentOutOfRange},
+		{name: "exponent 1e39", a: "1", b: "1e39", wantErr: ErrExponentOutOfRange},
+		{name: "exponent range wins over division by zero", a: "0", b: "-1001", wantErr: ErrExponentOutOfRange},
+		{name: "2 ^ 132", a: "2", b: "132", want: Result{"5444517870735015415413993718908291383296", "5444517870735015415413993718908291383296", Exact}},
+		{name: "2 ^ 133", a: "2", b: "133", wantErr: ErrResultTooLarge},
+		{name: "10 ^ 40", a: "10", b: "40", wantErr: ErrResultTooLarge},
+		{name: "1e10 ^ 4", a: "1e10", b: "4", wantErr: ErrResultTooLarge},
+		{name: "9999999999 ^ 4", a: "9999999999", b: "4", want: Result{"9999999996000000000599999999960000000001", "9999999996000000000599999999960000000001", Exact}},
+		{name: "1e-20 ^ -2", a: "1e-20", b: "-2", wantErr: ErrResultTooLarge},
+		{name: "-10 ^ 41", a: "-10", b: "41", wantErr: ErrResultTooLarge},
+		{name: "just above 10^(40/3) cubed", a: "21544346900318.83721760", b: "3", wantErr: ErrResultTooLarge},
+		{name: "just below 10^(40/3) cubed", a: "21544346900318.83721759", b: "3", want: Result{
+			"9999999999999999999995912154765580514273.886956099150079026448479",
+			"9999999999999999999995912154765580514273.886956099150079026448479",
+			Exact,
+		}},
+		{name: "too close to 10^40 for the bounds, above", a: "21544346900318.8372175929356651935050", b: "3", wantErr: ErrResultTooLarge},
+		{name: "too close to 10^40 for the bounds, below", a: "21544346900318.8372175929356651935049", b: "3", want: Result{
+			"9999999999999999999999999999999999926764.849732609788082946463401779497140587063003493248915650239962922649",
+			"9999999999999999999999999999999999926764.849732609788082946463401779497140587063003493248915650239962922649",
+			Exact,
+		}},
+		{name: "0.5 ^ 1000", a: "0.5", b: "1000", want: twoToMinus1000},
+		{name: "2 ^ -1000", a: "2", b: "-1000", want: twoToMinus1000},
+		{name: "0.25 ^ 501", a: "0.25", b: "501", wantErr: ErrResultTooPrecise},
+		{name: "(1/11) ^ 1000", a: "1/11", b: "1000", wantErr: ErrResultTooPrecise},
+		{name: "exact base near 1 with 1000 digits", a: oneAnd1000Digits, b: "1000", wantErr: ErrResultTooPrecise},
+		{name: "approximate base", a: "~2", b: "3", want: Result{"~8", "8", Approximate}},
+		{name: "approximate base, negative exponent", a: "~1.5", b: "-2", want: Result{"~0.44444444444444444444", "0.44444444444444444444", Approximate}},
+		{name: "approximate base near 1 with 1000 digits", a: "~" + oneAnd1000Digits, b: "1000", want: Result{"~1", "1", Approximate}},
+		{name: "approximate 1e-500 squared", a: "~1e-500", b: "2", want: Result{"~1e-1000", "1e-1000", Approximate}},
+		{name: "approximate 1e-500 cubed", a: "~1e-500", b: "3", wantErr: ErrResultTooPrecise},
+		{name: "approximate 1e-500 ^ 1000", a: "~1e-500", b: "1000", wantErr: ErrResultTooPrecise},
+		{name: "approximate 0.1 ^ 1000", a: "~0.1", b: "1000", want: Result{"~1e-1000", "1e-1000", Approximate}},
+		{name: "approximate 0.1 ^ -1000", a: "~0.1", b: "-1000", wantErr: ErrResultTooLarge},
+	})
+}
+
+func TestPowerOfAThirdKeepsTheExactFraction(t *testing.T) {
+	want := "1/" + new(big.Int).Exp(big.NewInt(3), big.NewInt(1000), nil).String()
+	got, err := Power(num(t, "1/3"), num(t, "1000"))
+	if err != nil {
+		t.Fatalf("error = %v", err)
+	}
+	// 10^490 / 3^1000 = 756389132310 (integer part), so 3^-1000 ≈ 7.56389132310 × 10^-478.
+	if got.Value != want || got.Kind != Repeating || !strings.HasPrefix(got.Decimal, "7.5638913231") || !strings.HasSuffix(got.Decimal, "e-478") {
+		t.Errorf("(1/3) ^ 1000 = %+v", got)
+	}
+}
+
+func TestBitsAboveMaxDenominator(t *testing.T) {
+	above := new(big.Int).Lsh(one, bitsAboveMaxDenominator)
+	below := new(big.Int).Lsh(one, bitsAboveMaxDenominator-1)
+	if above.Cmp(maxDenominator) <= 0 || below.Cmp(maxDenominator) >= 0 {
+		t.Errorf("2^%d must be the smallest power of 2 above 10^1000", bitsAboveMaxDenominator)
+	}
+}
+
+func BenchmarkPowerWorstCase(b *testing.B) {
+	oneAnd1000Digits := "1." + strings.Repeat("0", 999) + "1"
+	for _, base := range []string{oneAnd1000Digits, "~" + oneAnd1000Digits} {
+		x, err := Parse(base)
+		if err != nil {
+			b.Fatal(err)
+		}
+		exponent, _ := Parse("1000")
+		name := "exact"
+		if x.approximate {
+			name = "approximate"
+		}
+		b.Run(name, func(b *testing.B) {
+			for b.Loop() {
+				_, _ = Power(x, exponent)
+			}
+		})
+	}
+}
