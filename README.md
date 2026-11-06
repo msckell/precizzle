@@ -11,6 +11,30 @@ Operations: addition, subtraction, multiplication, division, exponentiation, squ
 
 Work in progress. Setup and run instructions and API examples are added as each block lands.
 
+## Development
+
+Requirements: Go 1.27 and Node.js 24 with npm.
+
+Backend, from `backend/`:
+
+```sh
+go test ./...   # run the tests
+go run .        # start the API on http://127.0.0.1:8080
+```
+
+Frontend, from `frontend/`:
+
+```sh
+npm ci              # install dependencies
+npm test            # run the tests
+npm run lint        # ESLint
+npm run typecheck   # TypeScript
+npm run build       # production build in dist/
+npm run dev         # start the dev server
+```
+
+The API has no endpoints yet; Block 1 adds them.
+
 ## Design decisions
 
 The full list, with the reason for each decision, is in the [decisions log](docs/SPEC.md#decisions-log). The main ones:

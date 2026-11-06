@@ -48,3 +48,12 @@ Backend, run from `backend/`:
 - Test: `go test ./...`
 - Build: `go build ./...`
 - Run: `go run .` (listens on `127.0.0.1:8080`)
+
+Frontend, run from `frontend/` after `npm ci`:
+
+- Lint: `npm run lint`
+- Format check: `npm run format:check` (fix with `npm run format`)
+- Typecheck: `npm run typecheck`
+- Test: `npm test`
+- Build: `npm run build`
+- Run: `npm run dev`
