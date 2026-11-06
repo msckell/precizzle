@@ -194,7 +194,7 @@ Content-Type: application/json
 
 Division, then chaining its `value`:
 
-```json
+```text
 POST /api/v1/divide    {"a": "1", "b": "3"}
 200                    {"value": "1/3", "decimal": "0.3333…3333", "kind": "repeating"}
 
@@ -207,7 +207,7 @@ POST /api/v1/subtract  {"a": "1", "b": "1/3"}
 
 Power, square root and percentage:
 
-```json
+```text
 POST /api/v1/power       {"base": "2", "exponent": "-2"}
 200                      {"value": "0.25", "decimal": "0.25", "kind": "exact"}
 
@@ -223,7 +223,7 @@ POST /api/v1/percentage  {"percent": "15"}
 
 A tiny result:
 
-```json
+```text
 POST /api/v1/divide  {"a": "1", "b": "3e30"}
 200                  {"value": "1/3000000000000000000000000000000", "decimal": "3.3333…3333e-31", "kind": "repeating"}
 ```
@@ -296,13 +296,13 @@ When a request has several problems, the API reports only the first one, checked
 | D8 | Exponentiation accepts integer exponents, negative ones included. | Positive exponents stay exact, and integer exponents never produce complex-number cases. |
 | D9 | **Superseded by D21 and D24.** Exact results are returned exactly, with up to 1000 fractional digits. Results that need approximation (repeating decimals, irrational roots) are rounded to 20 decimal places with round half even. An exact result that exceeds the supported limits is an error and is never silently rounded. | This keeps calculation precision separate from display precision. Half even avoids the upward bias of half up across many operations. |
 | D10 | **Superseded by D23.** Every successful response states the kind of result: `exact`, `repeating` or `irrational`. | The display rule (D11) depends on it, and the backend can prove it. A reduced fraction repeats unless its denominator has no prime factors other than 2 and 5, and the square root of a rational number is irrational unless the numerator and the denominator are perfect squares. |
-| D11 | **The copy rule is superseded by D25.** Stored precision and display precision are separate. The stored value is the complete result the API returned (D9): up to 1000 fractional digits for exact results and 20 for approximated ones. The display is frontend only and shows at most 100 fractional digits, truncated and never rounded. At first it shows 4 decimals and an ellipsis for `repeating` results, and 5 decimals and an ellipsis for every other result with more than 5 decimals. Results with 5 or fewer decimals show in full with no ellipsis. Each click on the ellipsis expands the result to 20, 40, 60, 80 and then 100 fractional digits. Expansion stops early when the result has fewer digits, and stops at 100 even if more are stored. The ellipsis disappears once every displayable digit is visible. Expanding never recalculates or changes the stored value. Copying and chaining always use the complete stored value, whatever is visible. Long numbers never break the layout. | The owner prioritizes both comfortable reading and mathematical precision: the display stays short and readable, and no stored digit is ever lost. |
+| D11 | **The stored value and the copy rule are superseded by D21 and D25.** Stored precision and display precision are separate. The stored value is the complete result the API returned (D9): up to 1000 fractional digits for exact results and 20 for approximated ones. The display is frontend only and shows at most 100 fractional digits, truncated and never rounded. At first it shows 4 decimals and an ellipsis for `repeating` results, and 5 decimals and an ellipsis for every other result with more than 5 decimals. Results with 5 or fewer decimals show in full with no ellipsis. Each click on the ellipsis expands the result to 20, 40, 60, 80 and then 100 fractional digits. Expansion stops early when the result has fewer digits, and stops at 100 even if more are stored. The ellipsis disappears once every displayable digit is visible. Expanding never recalculates or changes the stored value. Copying and chaining always use the complete stored value, whatever is visible. Long numbers never break the layout. | The owner prioritizes both comfortable reading and mathematical precision: the display stays short and readable, and no stored digit is ever lost. |
 | D12 | **The limits are superseded by D24, and D22 adds formats.** Operands are plain decimals with an optional leading `-` and an optional `.`, and scientific notation (`1e-3`, `2.5E10`) is also accepted. A leading `+`, thousands separators and `,` as the decimal separator are rejected. Operands and results share the same limits, 40 integer digits and 1000 fractional digits, measured after expanding scientific notation. | One unambiguous syntax plus scientific notation for API users. Shared limits guarantee that every result is a valid operand, so chaining always works. |
 | D13 | **Extended by D22.** Results are canonical: no trailing zeros, no leading zeros, no `-0` and no scientific notation (`1.10 + 1.20` returns `2.3`). | Each value has one representation, which keeps the API and the tests simple. The UI can still format results. |
 | D14 | One endpoint per operation: `POST /api/v1/{operation}` with a JSON body. Percentage takes the percent plus an optional base and preceding operator. | Versioned paths and JSON bodies of strings follow from D4. Percentage needs the operator for D7, and keeping it in one call puts every percent rule in Go, where it is tested. |
 | D15 | Repository layout: the Go module in `backend/`, the Vite app in `frontend/`, and documentation at the root. | Each layer is self-contained, and the layout matches the path instructions in `.coderabbit.yaml`. |
 | D16 | **The response shape is superseded by D21.** Request bodies: `{"a","b"}` for add, subtract, multiply and divide; `{"base","exponent"}` for power; `{"value"}` for square root; `{"percent"}` for percentage, with optional `"base"` and `"operator"` (`add`, `subtract`, `multiply` or `divide`), which must be given together. A successful response is `200 {"result": "...", "kind": "..."}`. | Field names state each operand's role, and the success shape is the same for every operation. |
-| D17 | HTTP status codes: `400` when the request itself is wrong (malformed JSON, missing field, invalid or out-of-range number, non-integer or out-of-range exponent, invalid operator); `422` when the request is well formed but the result does not exist or cannot be represented (division by zero, square root of a negative number, `result_too_large` for more than 40 integer digits, `result_too_precise` for more than 1000 fractional digits); `404`, `405`, `413` for an oversized body, and `415` for a body that is not JSON. | Clients can tell a request they must fix from a calculation that has no representable answer. |
+| D17 | **D24 restates the limits behind `result_too_large` and `result_too_precise`.** HTTP status codes: `400` when the request itself is wrong (malformed JSON, missing field, invalid or out-of-range number, non-integer or out-of-range exponent, invalid operator); `422` when the request is well formed but the result does not exist or cannot be represented (division by zero, square root of a negative number, `result_too_large` for more than 40 integer digits, `result_too_precise` for more than 1000 fractional digits); `404`, `405`, `413` for an oversized body, and `415` for a body that is not JSON. | Clients can tell a request they must fix from a calculation that has no representable answer. |
 | D18 | Power edge cases: `0^0 = 1`, `0` raised to a negative exponent is a division by zero, and the exponent must be between −1000 and 1000. | `0^0 = 1` is the usual convention in calculators and programming languages. The exponent range bounds the cost of a single request. Most larger exponents would exceed the result limits anyway, but a few representable results are rejected too, such as `1.0001^-2000` (about 0.82). |
 | D19 | The UI text is in English. | Everything in the repository is in English. |
 | D20 | The out of scope list below is approved. | It keeps the calculator focused on the operations and behaviors in this document. |
