@@ -102,6 +102,7 @@ Every result has a `kind` (D23):
 - Square roots are correctly rounded: the 20 digits are those of the true root, not of an intermediate approximation.
 - Round half even: a tie goes to the even digit, so 0.125 rounded to 2 digits is 0.12, and 0.135 is 0.14.
 - When 0 < \|x\| < 10⁻²⁰, `decimal` uses scientific notation: one non-zero digit before the point, the same number of fractional digits in the mantissa, then `e` and the exponent (`3.3333…3333e-31`). An approximate result never goes past the 1000th fractional digit of its plain form, so its mantissa can have fewer than 20 fractional digits.
+- The notation depends on the value the API returns, after rounding, not on the value before rounding (D36). An approximate result just below 10⁻²⁰ that rounds to 10⁻²⁰ is written `0.00000000000000000001`, the same as when that value is sent back.
 - A non-zero result never becomes 0. It is either represented or rejected with `result_too_precise` (D24).
 
 ### Examples
@@ -353,6 +354,7 @@ When a request has several problems, the API reports only the first one, checked
 | D33 | The listen address comes from the environment variable `PRECIZZLE_ADDR`, `127.0.0.1:8080` by default. | It is the only setting D27 needs to vary. The prefix avoids clashes with other variables. |
 | D34 | CI fails when statement coverage drops below 95% in `internal/calc` or below 90% in `internal/api`. | It protects the arithmetic without forcing artificial tests of trivial code such as server startup. |
 | D35 | The request body is decoded strictly with `encoding/json/v2`: member names are case-sensitive (`"A"` is `unknown_field`), a duplicate member is `invalid_json`, and any data after the object is `invalid_json`. | `encoding/json` (v1) accepts `"A"` as `a` and keeps the last of two duplicate members. A client could send two values without knowing which one was used. In Go 1.27.3, v2 needs no experiment flag. |
+| D36 | The notation of a `decimal` is chosen from the value the API returns, after rounding. | The owner requires that a returned value reads the same when it is sent back in a later calculation. Choosing the notation before rounding wrote one value two ways: an approximate √(0.99…9 × 10⁻⁴⁰) gave `1e-20`, but sending that value back gave `0.00000000000000000001`. |
 
 ## Out of scope
 
