@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: backend/go.mod
+          # The backend has no dependencies, so there is no go.sum to cache.
+          cache: false
+
+      - name: Check formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "::error::These files are not formatted with gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race -cover ./... | tee "$RUNNER_TEMP/test-output.txt"
+
+      - name: Check coverage thresholds
+        run: |
+          status=0
+          {
+            echo "| Package | Coverage | Minimum |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          while read -r pkg minimum; do
+            coverage="$(awk -v pkg="github.com/msckell/precizzle/backend/$pkg" '
+              $2 == pkg { for (i = 1; i < NF; i++) if ($i == "coverage:") print substr($(i + 1), 1, length($(i + 1)) - 1) }
+            ' "$RUNNER_TEMP/test-output.txt")"
+            echo "| $pkg | ${coverage:-missing}% | $minimum% |" >> "$GITHUB_STEP_SUMMARY"
+            if [ -z "$coverage" ] || awk -v c="$coverage" -v m="$minimum" 'BEGIN { exit !(c < m) }'; then
+              echo "::error::$pkg coverage is ${coverage:-missing}%, below the minimum of $minimum% (D34)"
+              status=1
+            fi
+          done <<'EOF'
+          internal/calc 95
+          internal/api 90
+          EOF
+          exit "$status"
