@@ -6,6 +6,7 @@ coverage.html
 
 # Node
 node_modules/
+*.log
 dist/
 coverage/
 
