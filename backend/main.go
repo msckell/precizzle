@@ -10,5 +10,5 @@ func newHandler() *http.ServeMux {
 }
 
 func main() {
-	log.Fatal(http.ListenAndServe(":8080", newHandler()))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8080", newHandler()))
 }

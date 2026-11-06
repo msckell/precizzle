@@ -47,4 +47,4 @@ Backend, run from `backend/`:
 - Vet: `go vet ./...`
 - Test: `go test ./...`
 - Build: `go build ./...`
-- Run: `go run .` (listens on `:8080`)
+- Run: `go run .` (listens on `127.0.0.1:8080`)
