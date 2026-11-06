@@ -543,3 +543,86 @@ English translation:
 > When you finish, present the test results and the changes made before continuing.
 
 **Status:** Point 1 is D37 (`500 internal_error`). Point 2 changed the 422 example in [docs/SPEC.md](docs/SPEC.md#errors) and explains that the status line text is informational. Point 3 needs no change: paths with `..` or `.` get the standard redirect of `ServeMux`.
+
+### 3.4 Pull request and review
+
+**Push, pull request and review instructions.** Original (Spanish):
+
+> Perfecto, apruebo el Milestone 4 y autorizo el push de la rama feat/backend-api y la creación de la Pull Request con el título y la descripción que propusiste.
+>
+> Estoy conforme con los resultados de las pruebas, las correcciones implementadas y la documentación.
+>
+> Quiero que prestemos especial atención a los controles de GitHub Actions, particularmente al detector de condiciones de carrera, que todavía no pudo ejecutarse localmente.
+>
+> Si alguno de los controles falla, investigá la causa y presentame el diagnóstico y la solución correspondiente antes de continuar.
+>
+> Una vez abierta la Pull Request, seguí el protocolo de CodeRabbit que establecimos. Verificá individualmente sus observaciones, reproducí los problemas cuando corresponda y presentame las recomendaciones clasificadas según su validez, importancia y solución propuesta.
+>
+> No apliques automáticamente las sugerencias de CodeRabbit sin mi aprobación.
+>
+> Cuando todas las verificaciones hayan terminado, mostrame el estado de la Pull Request, los resultados de GitHub Actions y la revisión de CodeRabbit.
+>
+> No realices el merge hasta que lo autorice expresamente.
+
+English translation:
+
+> Perfect, I approve Milestone 4 and authorize pushing the feat/backend-api branch and creating the Pull Request with the title and description you proposed.
+>
+> I am happy with the test results, the fixes implemented and the documentation.
+>
+> I want us to pay special attention to the GitHub Actions checks, particularly the race detector, which could not run locally yet.
+>
+> If any of the checks fails, investigate the cause and present the diagnosis and the corresponding solution to me before continuing.
+>
+> Once the Pull Request is open, follow the CodeRabbit protocol we established. Verify its observations one by one, reproduce the problems when it applies and present your recommendations classified by validity, importance and proposed solution.
+>
+> Do not apply CodeRabbit's suggestions automatically without my approval.
+>
+> When all the checks have finished, show me the state of the Pull Request, the GitHub Actions results and the CodeRabbit review.
+>
+> Do not merge until I explicitly authorize it.
+
+**Status:** The race detector ran in CI on Linux and found no races. CodeRabbit's first review showed that the test step ran without `pipefail`.
+
+#### CodeRabbit triage ([PR #2](https://github.com/msckell/precizzle/pull/2))
+
+| Finding | Selected answer | Final decision |
+|---|---|---|
+| The CI test step runs without `pipefail`, so `tee` can hide a failing `go test` | Apply the fix: `shell: bash` for the whole job | Commit `62eba5f` |
+| Unclean paths (`//`, `.`, `..`) get a `307` redirect instead of `not_found` | Keep the `ServeMux` behavior and document it, with a test | D38 |
+| Nitpick: the test of (1/3)^1000 checks only the ends of the decimal | Compare the full decimal and check the rounding conditions | Commit `99284d8` |
+| Nitpick: the exact benchmark case exits before the full power | Separate early rejections from full powers and check each result | Commit `de41dab` |
+
+**Fixes.** Original (Spanish):
+
+> Perfecto, revisé las cuatro observaciones de CodeRabbit y estoy de acuerdo con implementar las soluciones que propusiste.
+>
+> 1. Corregí la configuración de GitHub Actions para que cualquier fallo de los tests se detecte correctamente, incluso cuando se utiliza tee. Quiero que el CI nunca informe un resultado exitoso si alguna prueba falló.
+>
+> 2. Mantené el comportamiento estándar de ServeMux para las rutas no normalizadas y documentá correctamente las redirecciones 307 en la SPEC, sin modificar innecesariamente la implementación.
+>
+> 3. Mejorá el test de (1/3)^1000 para verificar la totalidad del resultado decimal, no solamente sus extremos. Utilizá una verificación independiente y comprobá también las condiciones matemáticas necesarias para el redondeo.
+>
+> 4. Corregí los benchmarks de potencias para distinguir claramente entre las operaciones rechazadas anticipadamente y aquellas que realmente ejecutan el cálculo completo. Quiero que los benchmarks representen fielmente lo que están midiendo y verifiquen la corrección de sus resultados.
+>
+> Aplicá cada corrección en su propio commit, ejecutá las verificaciones correspondientes y mostrame los resultados.
+>
+> Después, presentame el estado actualizado del CI y de CodeRabbit antes de continuar con el cierre de la Pull Request.
+
+English translation:
+
+> Perfect, I reviewed the four CodeRabbit observations and I agree with implementing the solutions you proposed.
+>
+> 1. Fix the GitHub Actions configuration so that any test failure is detected correctly, even when tee is used. I want CI to never report success if any test failed.
+>
+> 2. Keep the standard ServeMux behavior for unclean paths and document the 307 redirects properly in the SPEC, without changing the implementation unnecessarily.
+>
+> 3. Improve the test of (1/3)^1000 to check the whole decimal result, not only its ends. Use an independent check and also verify the mathematical conditions needed for the rounding.
+>
+> 4. Fix the power benchmarks to clearly separate the operations rejected early from those that really run the full calculation. I want the benchmarks to faithfully represent what they measure and to check that their results are correct.
+>
+> Apply each fix in its own commit, run the corresponding checks and show me the results.
+>
+> Then, present the updated state of CI and CodeRabbit before continuing with closing the Pull Request.
+
+**Status:** The exact full-power case takes about 76 ms, the same order as the approximate one accepted in 3.3. After the replies on both threads, CodeRabbit approved the pull request.
