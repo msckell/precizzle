@@ -469,3 +469,39 @@ Before the questions, the assistant compared shopspring/decimal 1.6.0, cockroach
 | How strict is the JSON parser? | Strict with json/v2 | D35 |
 
 **Status:** The owner approved the decisions and the plan that contains them, including the contract clarifications: [docs/plans/block-1-backend-api.md](docs/plans/block-1-backend-api.md).
+
+### 3.3 Execution
+
+**Milestone 2 approval, canonical notation and performance.** Original (Spanish):
+
+> Perfecto, apruebo el Milestone 2 y las tres observaciones que presentaste.
+>
+> Estoy de acuerdo con incorporar la aclaración en SPEC.md sobre la representación canónica de los resultados redondeados. Quiero que la representación se determine siempre a partir del valor final que efectivamente devuelve la API, garantizando consistencia cuando ese mismo valor se reutiliza en operaciones posteriores.
+>
+> Respecto al rendimiento, considero aceptables los aproximadamente 80 ms del caso extremo. No hace falta introducir optimizaciones adicionales mientras las operaciones permanezcan correctamente acotadas y cumplan los límites establecidos.
+>
+> También estoy conforme con las correcciones de las dos expectativas matemáticas, siempre que estén respaldadas por las verificaciones independientes que realizaste.
+>
+> Podés avanzar con el Milestone 3 e implementar la capa HTTP, las rutas, la validación JSON, el manejo de errores y la configuración del servidor según el plan aprobado.
+>
+> Mantené las pruebas automatizadas y verificá que las respuestas de la API sean completamente consistentes con el motor matemático y con SPEC.md.
+>
+> Al terminar, presentame los resultados de las verificaciones y los cambios realizados antes de continuar.
+
+English translation:
+
+> Perfect, I approve Milestone 2 and the three observations you presented.
+>
+> I agree with adding the clarification to SPEC.md about the canonical representation of rounded results. I want the representation to always be determined from the final value that the API actually returns, guaranteeing consistency when that same value is reused in later operations.
+>
+> Regarding performance, I consider the roughly 80 ms of the extreme case acceptable. There is no need to introduce additional optimizations as long as the operations remain properly bounded and meet the established limits.
+>
+> I am also fine with the corrections of the two mathematical expectations, as long as they are backed by the independent verifications you performed.
+>
+> You can move on to Milestone 3 and implement the HTTP layer, the routes, the JSON validation, the error handling and the server configuration according to the approved plan.
+>
+> Keep the automated tests and verify that the API responses are fully consistent with the math engine and with SPEC.md.
+>
+> When you finish, present the results of the verifications and the changes made before continuing.
+
+**Status:** The notation rule is D36. The worst case of `power`, an approximate base of 1000 digits close to 1 raised to 1000, takes about 80 ms and is accepted without further optimization.
