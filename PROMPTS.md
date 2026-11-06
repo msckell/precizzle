@@ -401,3 +401,71 @@ English translation:
 |---|---|---|
 | The limits "denominator ≤ 10¹⁰⁰⁰" and "≤ 1000 fractional digits" disagree for `1/2^1001` | Digits for terminating values, denominator for repeating ones | D24 |
 | D22 requires reduced fractions, but requests accept `4/2` | Apply the fix | D22 |
+
+---
+
+## 3. Block 1: Backend in Go
+
+### 3.1 Starting prompt
+
+Block plan: [docs/plans/block-1-backend-api.md](docs/plans/block-1-backend-api.md)
+
+Original (Spanish):
+
+> Quiero comenzar el Block 1 de Precizzle.
+>
+> Primero, revisá el master prompt, CLAUDE.md, docs/SPEC.md, los planes anteriores y el historial de Git para recuperar el contexto completo del proyecto.
+>
+> Confirmá que main esté actualizado y que no haya cambios pendientes. Después, prepará la rama feat/backend-api siguiendo nuestro flujo de trabajo.
+>
+> Quiero que empecemos con la entrevista técnica de este bloque. Investigá las alternativas necesarias, verificá sus características en la documentación oficial y presentame las decisiones que realmente requieren mi intervención, junto con tus recomendaciones y sus principales ventajas y desventajas.
+>
+> Prestá especial atención a la elección de la biblioteca matemática, considerando que decidimos conservar fracciones racionales exactas, distinguir resultados aproximados y evitar pérdidas silenciosas de precisión.
+>
+> Respetá todas las decisiones registradas en SPEC.md y no modifiques comportamientos previamente acordados sin consultarme.
+>
+> Una vez terminada la entrevista y aprobadas las decisiones, pasamos a Plan Mode para preparar el plan del bloque.
+>
+> Mantené los checkpoints establecidos y no comiences a implementar el backend hasta que apruebe el plan.
+
+English translation:
+
+> I want to start Block 1 of Precizzle.
+>
+> First, review the master prompt, CLAUDE.md, docs/SPEC.md, the previous plans and the Git history to recover the full context of the project.
+>
+> Confirm that main is up to date and that there are no pending changes. Then, prepare the feat/backend-api branch following our workflow.
+>
+> I want us to start with the technical interview for this block. Research the necessary alternatives, verify their features in the official documentation and present to me the decisions that really require my input, together with your recommendations and their main advantages and disadvantages.
+>
+> Pay special attention to the choice of the math library, considering that we decided to keep exact rational fractions, distinguish approximate results and avoid silent precision loss.
+>
+> Respect every decision recorded in SPEC.md and do not change previously agreed behaviors without asking me.
+>
+> Once the interview is over and the decisions are approved, we move to Plan Mode to prepare the block plan.
+>
+> Keep the established checkpoints and do not start implementing the backend until I approve the plan.
+
+### 3.2 Interview
+
+Before the questions, the assistant compared shopspring/decimal 1.6.0, cockroachdb/apd 3.2.3 and Go's `math/big` with a throwaway experiment (0.1 + 0.2, 1 ÷ 3 then × 3, 2 ^ −2, √2, 0 ^ −1 and 1 ÷ 3e30). Only `math/big` kept `1/3` exact. The results are summarized in D28.
+
+#### Round 1: math library, HTTP layer, development connection, layout
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| Which math base does the backend use? | Only math/big | D28 |
+| Which HTTP layer? | Standard net/http | D29 |
+| How does the frontend reach the API during development? | Vite proxy | D31 |
+| How are the backend packages organized? | main.go + internal/ | D30 |
+
+#### Round 2: health, configuration, coverage, JSON strictness
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| Which health endpoint? | GET /healthz outside /api | D32 |
+| What is configured through environment variables? | Only PRECIZZLE_ADDR | D33 |
+| What test coverage is required? | CI threshold: calc ≥ 95%, api ≥ 90% | D34 |
+| How strict is the JSON parser? | Strict with json/v2 | D35 |
+
+**Status:** The owner approved the decisions and the plan that contains them, including the contract clarifications: [docs/plans/block-1-backend-api.md](docs/plans/block-1-backend-api.md).

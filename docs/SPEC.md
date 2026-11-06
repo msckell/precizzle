@@ -314,6 +314,19 @@ When a request has several problems, the API reports only the first one, checked
 | D26 | Frontend tooling: ESLint with typescript-eslint, and Prettier, with TypeScript pinned to `~6.0.3`. | The master prompt asks for ESLint and Prettier. The default Vite React-TS template (create-vite 9.3.4) ships oxlint and TypeScript 7.0, but typescript-eslint 8.72 supports only TypeScript below 6.1. The template's `--eslint` option ships ESLint with TypeScript `~6.0.3`, so the frontend is scaffolded with it. |
 | D27 | During local development the backend listens only on `127.0.0.1:8080`. The Docker setup (Block 3) sets the address its environment needs. | The owner does not want the development server reachable from other machines on the network. |
 
+### Block 1: Backend in Go
+
+| # | Decision | Reason |
+|---|---|---|
+| D28 | The arithmetic uses only Go's standard `math/big`: `big.Rat` holds every exact value and `big.Int.Sqrt` computes square roots. The backend implements its own operand parser and its own round half even. | An experiment with Go 1.27.3 compared shopspring/decimal 1.6.0, cockroachdb/apd 3.2.3 and `math/big`. Both decimal libraries store `1 ÷ 3` as a rounded decimal, so `1 ÷ 3 × 3` returns `0.999…` and breaks D21. shopspring also loses precision silently: by default `1 ÷ 3e30` returns `0` and `0 ^ −1` returns `0` without an error. `big.Rat` keeps `1/3` exactly, and `Rat.FloatPrec` tells whether a decimal terminates. Two documented gaps are covered by our own code: `Rat.FloatString` rounds halves away from zero, and `Rat.SetString` accepts forms outside the operand syntax, such as `+5` and `0x10`. |
+| D29 | The HTTP layer is the standard `net/http` `ServeMux` with method patterns (`POST /api/v1/add`). No router dependency. The backend answers `not_found` and `method_not_allowed` itself in Problem Details. | Seven fixed routes need no router. Both the standard mux and chi need custom 404 and 405 handlers anyway, because the built-in ones answer in `text/plain`. |
+| D30 | Package layout: `backend/main.go` starts the server, `backend/internal/calc` holds the number model (parsing, arithmetic, rounding, formatting) and `backend/internal/api` holds the HTTP handlers. | It separates the arithmetic from HTTP and allows coverage per package (D34). `go run .` keeps working, and with a single binary a `cmd/` directory adds nothing. |
+| D31 | During development the Vite dev server proxies `/api` to the backend. The backend sends no CORS headers. | The browser sees one origin, so no CORS code is needed. A cross-origin `POST` with `Content-Type: application/json` triggers an `OPTIONS` preflight, which the API answers with `405`. |
+| D32 | `GET /healthz`, outside `/api/`, returns `200` with `{"status": "ok"}`. | Docker (Block 3) can check that the server is alive, and the rule that every path under `/api/` accepts only `POST` stays intact. |
+| D33 | The listen address comes from the environment variable `PRECIZZLE_ADDR`, `127.0.0.1:8080` by default. | It is the only setting D27 needs to vary. The prefix avoids clashes with other variables. |
+| D34 | CI fails when statement coverage drops below 95% in `internal/calc` or below 90% in `internal/api`. | It protects the arithmetic without forcing artificial tests of trivial code such as server startup. |
+| D35 | The request body is decoded strictly with `encoding/json/v2`: member names are case-sensitive (`"A"` is `unknown_field`), a duplicate member is `invalid_json`, and any data after the object is `invalid_json`. | `encoding/json` (v1) accepts `"A"` as `a` and keeps the last of two duplicate members. A client could send two values without knowing which one was used. In Go 1.27.3, v2 needs no experiment flag. |
+
 ## Out of scope
 
 - User accounts and authentication.
