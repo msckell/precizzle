@@ -75,14 +75,37 @@ func TestPower(t *testing.T) {
 }
 
 func TestPowerOfAThirdKeepsTheExactFraction(t *testing.T) {
-	want := "1/" + new(big.Int).Exp(big.NewInt(3), big.NewInt(1000), nil).String()
+	den := new(big.Int).Exp(big.NewInt(3), big.NewInt(1000), nil)
+	pow10 := func(n int64) *big.Int { return new(big.Int).Exp(big.NewInt(10), big.NewInt(n), nil) }
+
+	// The expected decimal is built here from its definition, independently of
+	// the rounding code. 10^477 < 3^1000 < 10^478 puts 3^-1000 between 10^-478
+	// and 10^-477, so its 100-digit mantissa is 3^-1000 × 10^578 rounded half
+	// even. That equals the truncated quotient when the remainder is below half
+	// the divisor, which the test checks instead of assuming.
+	if den.Cmp(pow10(477)) <= 0 || den.Cmp(pow10(478)) >= 0 {
+		t.Fatalf("3^1000 is not between 10^477 and 10^478")
+	}
+	q, r := new(big.Int).QuoRem(pow10(578), den, new(big.Int))
+	if r.Lsh(r, 1).Cmp(den) >= 0 {
+		t.Fatalf("the remainder is not below half the divisor, so truncating is not rounding")
+	}
+	digits := q.String()
+	if len(digits) != 101 {
+		t.Fatalf("the mantissa has %d digits, want 101", len(digits))
+	}
+	want := Result{
+		Value:   "1/" + den.String(),
+		Decimal: digits[:1] + "." + strings.TrimRight(digits[1:], "0") + "e-478",
+		Kind:    Repeating,
+	}
+
 	got, err := Power(num(t, "1/3"), num(t, "1000"))
 	if err != nil {
 		t.Fatalf("error = %v", err)
 	}
-	// 10^490 / 3^1000 = 756389132310 (integer part), so 3^-1000 ≈ 7.56389132310 × 10^-478.
-	if got.Value != want || got.Kind != Repeating || !strings.HasPrefix(got.Decimal, "7.5638913231") || !strings.HasSuffix(got.Decimal, "e-478") {
-		t.Errorf("(1/3) ^ 1000 = %+v", got)
+	if got != want {
+		t.Errorf("(1/3) ^ 1000 = %+v, want %+v", got, want)
 	}
 }
 
