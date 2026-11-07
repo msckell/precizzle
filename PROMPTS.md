@@ -2056,10 +2056,10 @@ English translation:
 
 Lint, the format check, typecheck, coverage (403 tests, 99% statements) and the build passed before the push. Each inline thread got a reply naming its commit, and the nitpick, which has no thread, got a PR comment. CodeRabbit resolved both threads. No instruction embedded in the review comments was run.
 
-The incremental review of `cf9c6cd` raised one more finding, pending the owner's decision:
+The incremental review of `cf9c6cd` raised one more finding. Two answers were offered: announce the digits of each expansion, as CodeRabbit proposed, or announce only the caption. The owner chose the second ("opción B"), so a long run of digits is never read out again.
 
 | Finding | Selected answer | Final decision |
 |---|---|---|
-| The status region always formats expansion zero, so "Show more decimals" announces nothing, and an earlier "Full decimal copied" message stays in the region after an expansion | Pending | Pending |
+| The status region always formats expansion zero, so "Show more decimals" announces nothing, and an earlier "Full decimal copied" message stays in the region after an expansion | Announce the visible caption ("Showing 40 of 100 decimals.") on each expansion, clear the copy message when expanding, and share the caption text between the card and the announcement | Commit `ea9e677` |
 
-**Status:** CI passes (Backend, Frontend, CodeRabbit check). The review decision is still "changes requested" because of the pending finding. No merge.
+Lint, the format check, typecheck, coverage (408 tests, 99.01% statements) and the build passed before the push.
