@@ -87,6 +87,30 @@ function ok(value: string, decimal: string, kind: Kind): Success {
 // Every row of SPEC §5 "Expression examples", answered as the real API answers it.
 // The long decimals are built from their digits instead of being written out.
 export const fixtures: Record<string, Success | Problem> = {
+  "(2^(3))%": ok("0.08", "0.08", "exact"),
+  "((1)/(2^(3))%)": ok("12.5", "12.5", "exact"),
+  "((1)/-(2^(3))%)": ok("-12.5", "-12.5", "exact"),
+  "((200)/15%)": ok("4000/3", "1333." + "3".repeat(100), "repeating"),
+  "sqrt(2)": ok(
+    "~1.4142135623730950488",
+    "1.4142135623730950488",
+    "approximate",
+  ),
+  "1000*(1+((5)/(100)))^(12)": ok(
+    "1795.856326022129150390625",
+    "1795.856326022129150390625",
+    "exact",
+  ),
+  "1500*[~1.4142135623730950488]": ok(
+    "~2121.3203435596425732",
+    "2121.3203435596425732",
+    "approximate",
+  ),
+  "(((2+3)^(2))/(3))+sqrt(2.25)": ok(
+    "59/6",
+    "9.8" + "3".repeat(99),
+    "repeating",
+  ),
   "0.1+0.2": ok("0.3", "0.3", "exact"),
   "2+3*4": ok("14", "14", "exact"),
   "(2+3)*4": ok("20", "20", "exact"),

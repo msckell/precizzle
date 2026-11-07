@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw/http";
 import { server } from "./mocks/server.ts";
 import { fixtures, requests, requestFixtures } from "./mocks/handlers.ts";
@@ -148,6 +148,30 @@ describe("evaluate client", () => {
       type: "failure",
       reason: "network_failure",
     });
+  });
+  it("preserves cancellation while reading the response body", async () => {
+    const controller = new AbortController();
+    const fetchRequest = globalThis.fetch;
+    // MSW's transport asserts on an aborted stream; keep the request real and inject the body-read failure.
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementationOnce(async (...args) => {
+        const response = await fetchRequest(...args);
+        await response.clone().text();
+        response.json = async () => {
+          controller.abort();
+          throw new DOMException("Aborted", "AbortError");
+        };
+        return response;
+      });
+    try {
+      await expect(
+        evaluate("0.1+0.2", controller.signal),
+      ).rejects.toMatchObject({ name: "AbortError" });
+      expect(requests).toHaveLength(1);
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
   it("passes cancellation through without reporting a network failure", async () => {
     const controller = new AbortController();
