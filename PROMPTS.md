@@ -1620,3 +1620,39 @@ Written in English and pasted as Markdown.
 **Status:** Fetched `origin` and merged `origin/main` (`f753ad1`) into `feat/frontend` without conflicts, in merge commit `0129b1e`. Created `AGENTS.md` as an exact copy of the merged `CLAUDE.md`. The initial frontend checks passed. Updated MSW fixtures for D54, D55, request-level errors and serialized examples; all 52 fixtures match the real API's complete body, HTTP status and content type. Lint, formatting, typecheck, 24 tests, coverage and build pass. Statement coverage is 100% of the existing one-statement application skeleton; editor coverage does not exist yet. Normal functional verification now uses the real backend. The temporary browser mock remains scheduled for removal before the PR.
 
 **Specification checkpoint before Milestone 2:** Real API verification exposed an interaction between D81 and D55. `[1/3]/[~1.4142135623730950488]%` returns `~23.57022603955158414672`. D81's fraction form, `(([1/3])/([~1.4142135623730950488]%))`, instead returns `~23.57022603955158414339`: grouping the denominator makes its percentage a separate intermediate operation. The proposed exception, `(([1/3])/[~1.4142135623730950488]%)`, returns the D55 result. Proposal pending owner approval: retain D81 for ordinary fractions, but omit the denominator's added parentheses when it consists only of a percentage operand, optionally preceded by unary minus signs. Preserve explicit parentheses entered by the user and all other grouping. No specification, plan or backend implementation was changed, and Milestone 2 implementation is pending this decision.
+
+#### Approval of the D81 exception and continuation
+
+Original (Spanish):
+
+> Sí, apruebo la excepción limitada a D81 que proponés.
+>
+> Cuando el denominador sea únicamente un porcentaje, incluyendo los casos con signos negativos, omití los paréntesis que agrega automáticamente el serializador para preservar el comportamiento de D55.
+>
+> Quiero que respetemos siempre los paréntesis introducidos explícitamente por el usuario y que las demás reglas de agrupación permanezcan exactamente como estaban.
+>
+> Documentá esta excepción y agregá pruebas que verifiquen su comportamiento, especialmente con fracciones exactas, resultados aproximados, signos negativos y paréntesis explícitos.
+>
+> No modifiques el backend ni las reglas matemáticas ya aprobadas.
+>
+> Una vez hecho esto, continuá directamente con el Hito 2 según el plan existente. No necesitamos otra entrevista ni agregar funcionalidades nuevas.
+>
+> Mantené los checkpoints, las pruebas y las verificaciones habituales. No hagas push ni abras PRs sin mi autorización.
+
+English translation:
+
+> Yes, I approve the limited exception to D81 that you propose.
+>
+> When the denominator is only a percentage, including cases with negative signs, omit the parentheses that the serializer adds automatically to preserve D55's behavior.
+>
+> I want us always to respect parentheses explicitly entered by the user and to keep all other grouping rules exactly as they were.
+>
+> Document this exception and add tests that verify its behavior, especially with exact fractions, approximate results, negative signs and explicit parentheses.
+>
+> Do not modify the backend or the already approved mathematical rules.
+>
+> Once this is done, continue directly with Milestone 2 according to the existing plan. We do not need another interview or any new features.
+>
+> Keep the usual checkpoints, tests and verification. Do not push or open PRs without my authorization.
+
+**Status:** Approved. The limited exception is documented under D81 in `docs/SPEC.md`; the original implementation plan remains preserved verbatim.

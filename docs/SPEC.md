@@ -604,6 +604,14 @@ Decisions taken while building the frontend, numbered from D71.
 | D85 | The history is saved in `localStorage` under the key `precizzle.history.v1`. Each entry holds the editor tree of the expression and the `value`, `decimal` and `kind` of its result, newest first and up to 100 entries (D3). Only successful calculations are saved. Entries are validated when they are read, and unreadable data counts as an empty history. | Storing the tree lets "Load" restore fractions, roots and exponents without an expression parser in the frontend. `localStorage` holds data the app does not control, so it is validated at that boundary. |
 | D86 | Nunito is bundled with the app through `@fontsource-variable/nunito` 5.3.0, with tabular figures. | The app sends no request to third-party servers, and it works offline, for example in Docker (Block 3). |
 
+### D81: percentage denominator exception
+
+For a fraction whose denominator is only a percentage operand, optionally preceded by unary minus signs, the serializer omits the parentheses it would otherwise add around the denominator. It writes `((num)/B%)` or `((num)/-B%)`, preserving D55's single percentage operation. All other D81 grouping stays unchanged.
+
+Parentheses entered explicitly by the user are always preserved. In particular, a denominator entered as `(B%)` remains grouped and uses the ordinary `((num)/((B%)))` form. A percentage of an explicit group, `(B)%`, still qualifies for the exception and keeps that group: `((num)/(B)%)`.
+
+The owner approved this limited exception after real API verification showed that `(([1/3])/([~1.4142135623730950488]%))` and `[1/3]/[~1.4142135623730950488]%` differ because the former evaluates and rounds the percentage separately. The exception changes serialization only, not the API or mathematical rules.
+
 ## Out of scope
 
 - User accounts and authentication.
