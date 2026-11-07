@@ -49,7 +49,7 @@ describe("calculator input", () => {
       await waitFor(() => expect(requests).toHaveLength(1));
       expect(requests[0].body).toBe('{"expression":"0.1+0.2"}');
       await waitFor(() =>
-        expect(screen.getByRole("status")).toHaveTextContent(/0.3/),
+        expect(screen.getByRole("status")).toHaveTextContent(/^exact: 0\.3$/),
       );
     },
   );
@@ -155,6 +155,9 @@ describe("results", () => {
     await waitFor(() =>
       expect(screen.getByTestId("result-value")).toHaveTextContent("0.3333…"),
     );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /^repeating: 0\.3333…$/,
+    );
     expect(screen.queryByText(/Showing/)).not.toBeInTheDocument();
     const write = vi.spyOn(navigator.clipboard, "writeText");
     await user.click(screen.getByRole("button", { name: "Copy full decimal" }));
@@ -215,6 +218,9 @@ describe("results", () => {
       expect(screen.getByTestId("result-value")).toHaveTextContent("≈1.41421…"),
     );
     expect(screen.getByText("approximate")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /^approximate: 1\.41421…$/,
+    );
     await user.click(
       screen.getByRole("button", { name: "Show more decimals" }),
     );
