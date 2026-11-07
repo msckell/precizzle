@@ -2070,4 +2070,46 @@ The review of `c19d7d9` raised another finding. The race it describes is real in
 |---|---|---|
 | A clipboard write that finishes after "Show more decimals" sets the copy message again, because `copied` only checks `resultVersion`, so it replaces the expansion caption in the live region | Keep the behavior: the window is the few milliseconds `writeText` takes, the copy message is true when it arrives, rejecting it would hide a successful copy on the button and in the live region, and the caption stays visible and is announced again on the next expansion | No change; explained in the thread |
 
-**Status:** CI passes (Backend, Frontend, CodeRabbit check). The threads for the abbreviated announcement and the README are resolved; the expansion and copy-race threads have replies. No merge.
+CodeRabbit accepted both replies: it checked and resolved the expansion thread, and on the copy race it answered that preserving copy feedback is a reasonable choice. Its review decision stayed "changes requested", because GitHub keeps each reviewer's latest approving or rejecting review, and the later thread replies were comment-only reviews. The repository's `.coderabbit.yaml` enables `auto_approvals`, so CodeRabbit approves on its own when a review run finds nothing actionable.
+
+**Closing the review.** Original (Spanish):
+
+> Quiero que continúes con el protocolo de revisión del PR #5 y gestiones de forma autónoma las observaciones menores que puedan surgir.
+>
+> Mantené las decisiones funcionales y arquitectónicas que ya aprobamos. Si CodeRabbit plantea una observación válida, concreta y verificable, corregila con un cambio mínimo y sus pruebas correspondientes. Si la observación no corresponde o representa un compromiso de diseño que ya evaluamos, respondé con una justificación técnica clara.
+>
+> No necesito que me consultes por cada nitpick, ajuste de documentación o caso límite menor. Usá tu criterio técnico y respetá las decisiones existentes en la SPEC. Consultame únicamente si aparece un problema importante de corrección, seguridad, arquitectura o comportamiento que requiera cambiar una decisión aprobada.
+>
+> Revisá el estado actual de los dos hilos pendientes y verificá si CodeRabbit aceptó las justificaciones. No repitas respuestas que ya están publicadas.
+>
+> Consolidá los cambios pendientes, incluido el registro local de PROMPTS.md, y organizá el push de manera que evitemos revisiones adicionales innecesarias. No omitas documentación obligatoria ni checks para conseguirlo.
+>
+> Una vez publicado el estado definitivo, verificá que CodeRabbit haya aprobado la versión actual del PR, que los checks estén en verde y que no queden observaciones bloqueantes.
+>
+> Si todo está correctamente aprobado, presentame el estado final del PR para autorizar el merge. No hagas merge ni saltees protecciones de la rama sin mi autorización.
+>
+> Si CodeRabbit mantiene el estado “changes requested” pese a haber aceptado las respuestas, investigá concretamente qué impide la aprobación y explicame cómo resolverlo, sin introducir cambios de código injustificados.
+>
+> Mantené el alcance actual del frontend y evitá modificaciones que no estén justificadas por problemas reales. Priorizá la estabilidad, la coherencia y la calidad del código existente.
+
+English translation:
+
+> I want you to continue with the review protocol of PR #5 and handle any minor observations that come up on your own.
+>
+> Keep the functional and architectural decisions we already approved. If CodeRabbit raises a valid, concrete and verifiable observation, fix it with a minimal change and its tests. If the observation does not apply or reflects a design trade-off we already evaluated, reply with a clear technical justification.
+>
+> I do not need you to ask me about every nitpick, documentation tweak or minor edge case. Use your technical judgment and respect the existing decisions in the SPEC. Ask me only if an important correctness, security, architecture or behavior problem appears that would require changing an approved decision.
+>
+> Check the current state of the two pending threads and verify whether CodeRabbit accepted the justifications. Do not repeat replies that are already published.
+>
+> Consolidate the pending changes, including the local PROMPTS.md record, and organize the push so we avoid unnecessary extra reviews. Do not skip required documentation or checks to achieve that.
+>
+> Once the final state is published, verify that CodeRabbit approved the current version of the PR, that the checks are green and that no blocking observations remain.
+>
+> If everything is correctly approved, present the final state of the PR so I can authorize the merge. Do not merge or bypass branch protections without my authorization.
+>
+> If CodeRabbit keeps the "changes requested" state despite having accepted the replies, investigate specifically what prevents the approval and explain how to resolve it, without introducing unjustified code changes.
+>
+> Keep the current scope of the frontend and avoid changes not justified by real problems. Prioritize the stability, consistency and quality of the existing code.
+
+The accepted copy-race thread was marked resolved, and the pending `PROMPTS.md` records were pushed together, so CodeRabbit reviews the final head once.
