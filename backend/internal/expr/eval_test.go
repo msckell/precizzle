@@ -2,6 +2,7 @@ package expr
 
 import (
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 
@@ -182,5 +183,66 @@ func matchesCalc(t *testing.T, expression string, want calc.Result, wantErr erro
 	got, err := Evaluate(expression)
 	if got != want || (wantErr == nil) != (err == nil) || (wantErr != nil && !errors.Is(err, wantErr)) {
 		t.Errorf("Evaluate(%q) = %+v, %v, want %+v, %v", expression, got, err, want, wantErr)
+	}
+}
+
+func FuzzEvaluate(f *testing.F) {
+	for _, seed := range []string{
+		"0.1+0.2", "2+3*4", "(2+3)*4", "2^3^2", "-2^2", "2^-2", "1/3*3", "[1/7]*7", "sqrt(9/4)",
+		"sqrt(2)*sqrt(2)", "200+15%", "200-15%", "200*15%", "200/15%", "15%", "50+200+15%",
+		"50-200+15%", "200+15%+10%", "(50+200)+15%", "15%+200", "200+-15%", "200*-15%",
+		"1/0", "0^-1", "sqrt(-4)", "2^0.5", "2^1001", "10^50/10^20", "2+", "(2+3", "(2+", "2(3)",
+		"15%%", "1.2.3", "2 1.2.3", "sqrx(4)", "sqrt (4)", "((2+3", "[~1.4142135623730950488]%",
+		"[1e-999]%", "1e40", " 1 + [ 1 ] ", "\x00", "2+é", "",
+	} {
+		f.Add(seed)
+	}
+	known := []error{
+		ErrInvalidExpression, ErrExpressionTooComplex, calc.ErrInvalidNumber, calc.ErrOperandOutOfRange,
+		calc.ErrDivisionByZero, calc.ErrNegativeSquareRoot, calc.ErrExponentNotInteger,
+		calc.ErrExponentOutOfRange, calc.ErrResultTooLarge, calc.ErrResultTooPrecise,
+	}
+	f.Fuzz(func(t *testing.T, s string) {
+		r, err := Evaluate(s)
+		if err != nil {
+			e, ok := errors.AsType[*Error](err)
+			if !ok {
+				t.Fatalf("Evaluate(%q) error = %v, want an *Error", s, err)
+			}
+			if e.Position < 0 || e.Position > len(s) {
+				t.Fatalf("Evaluate(%q) position = %d, outside 0 to %d", s, e.Position, len(s))
+			}
+			if !slices.ContainsFunc(known, func(k error) bool { return errors.Is(e, k) }) {
+				t.Fatalf("Evaluate(%q) cause = %v, want a known error", s, e.Err)
+			}
+			return
+		}
+		if _, err := calc.Parse(r.Value); err != nil {
+			t.Fatalf("Evaluate(%q) value %q does not parse: %v", s, r.Value, err)
+		}
+	})
+}
+
+// BenchmarkEvaluateWorstCase measures the costliest expression that fits in
+// the 64 KiB body (D45, D52). Its 10 powers take the full-power path of
+// BenchmarkPowerWorstCase, and its 40 square roots work on operands with a
+// 1000-digit denominator. With the sums and a last product, it has exactly
+// 100 operations.
+func BenchmarkEvaluateWorstCase(b *testing.B) {
+	power := "[~1." + strings.Repeat("0", 999) + "1]^1000"
+	root := "+sqrt([1/" + strings.Repeat("9", 1000) + "])"
+	expression := repeat(power, "+", 10) + strings.Repeat(root, 40) + "*1"
+	if body := `{"expression": "` + expression + `"}`; len(body) > 64<<10 {
+		b.Fatalf("the body has %d bytes, more than 64 KiB", len(body))
+	}
+	if _, err := Evaluate(expression + "*1"); !errors.Is(err, ErrExpressionTooComplex) {
+		b.Fatalf("one more operation gives %v, want the operation limit", err)
+	}
+	want := calc.Result{Value: "~10", Decimal: "10", Kind: calc.Approximate}
+	if got, err := Evaluate(expression); got != want || err != nil {
+		b.Fatalf("Evaluate = %+v, %v, want %+v", got, err, want)
+	}
+	for b.Loop() {
+		_, _ = Evaluate(expression)
 	}
 }
