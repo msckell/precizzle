@@ -391,7 +391,7 @@ Errors are Problem Details, as in [Errors](#errors). An error about the text of 
 
 | Code | `position` points to |
 |---|---|
-| `invalid_expression` | The first character that cannot continue the expression: an unexpected token, a character outside the syntax, or the end of the expression (its length) when an operand is missing. An unclosed `(`, `sqrt(` or `[` points to its opening character. |
+| `invalid_expression` | The first character that cannot continue the expression: an unexpected token, a character outside the syntax, or the end of the expression (its length) when an operand is missing. An unclosed `(`, `sqrt(` or `[` points to its opening character. A missing operand inside an unclosed group is reported first, so `(2+` points to the end. |
 | `invalid_number`, `operand_out_of_range` | The first character of the number, or the `[` of the value. |
 | `expression_too_complex` | The first operator beyond the limit, or the opening character that nests too deep. |
 | `exponent_not_integer`, `exponent_out_of_range` | The `^`. |
@@ -445,6 +445,7 @@ Every row was checked with exact rational arithmetic.
 | `10^50/10^20` | `result_too_large` | 2 |
 | `2+` | `invalid_expression` | 2 |
 | `(2+3` | `invalid_expression` | 0 |
+| `(2+` | `invalid_expression` | 3 |
 | `2(3)` | `invalid_expression` | 1 |
 | `15%%` | `invalid_expression` | 3 |
 | `1.2.3` | `invalid_number` | 0 |
