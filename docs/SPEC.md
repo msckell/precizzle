@@ -613,6 +613,15 @@ Parentheses entered explicitly by the user are always preserved. In particular, 
 
 The owner approved this limited exception after real API verification showed that `(([1/3])/([~1.4142135623730950488]%))` and `[1/3]/[~1.4142135623730950488]%` differ because the former evaluates and rounds the percentage separately. The exception changes serialization only, not the API or mathematical rules.
 
+### Block 3: Docker
+
+| # | Decision | Reason |
+|---|---|---|
+| D88 | One image runs the whole app: the Go server also serves the frontend build. When `PRECIZZLE_STATIC_DIR` is set, `GET` and `HEAD` requests outside `/api/` and `/healthz` are served from that directory with Go's standard file server, and a missing file gets its plain `404`. When the variable is unset or empty, the server behaves exactly as before. The API, `/healthz` and every Problem Details response stay unchanged. | The owner chose it over two containers with docker compose and nginx. It is the single Dockerfile the master prompt asks for, the browser sees one origin as with the Vite proxy (D31), and the only Go change is in `main.go`. |
+| D89 | The Dockerfile is a multi-stage build: `node:24.15-alpine` builds the frontend, `golang:1.27.3-alpine` builds a static binary (`CGO_ENABLED=0`), and the final stage is `alpine:3.23` with only the binary and the frontend build. It runs as a non-root user. Inside the container `PRECIZZLE_ADDR` is `:8080`, and the documented command publishes the port only on the host loopback, `-p 127.0.0.1:8080:8080`. | The final image holds no build tools. The container needs every interface to receive the published port, and publishing it on the loopback keeps the app off the network, as D27 wants for development. |
+| D90 | A Dockerfile `HEALTHCHECK` calls `GET /healthz` (D32) with the busybox `wget` that `alpine` includes. | The owner chose `alpine` over a distroless image, which has no shell or `wget`, so its health check would need extra code in the binary. |
+| D91 | A `docker` CI job builds the image, starts it, waits until Docker reports it healthy, checks that `0.1+0.2` returns `0.3` through `evaluate`, and checks that `/` serves the app's HTML. | The owner chose a smoke test over a build only: it proves that the documented image starts and serves both layers. |
+
 ## Out of scope
 
 - User accounts and authentication.
