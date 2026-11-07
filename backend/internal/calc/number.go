@@ -44,6 +44,13 @@ func Parse(s string) (Number, error) {
 	return Number{rat: r, approximate: approximate}, nil
 }
 
+// Result returns the operand in canonical form, as an expression with no operation returns it.
+func (n Number) Result() Result {
+	// Parse accepts only values within the limits, so the result cannot fail.
+	r, _ := newResult(n)
+	return r
+}
+
 func parseFraction(num, den string) (*big.Rat, error) {
 	num, negative := strings.CutPrefix(num, "-")
 	if !isDigits(num) || !isDigits(den) {
