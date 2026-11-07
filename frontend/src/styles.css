@@ -340,6 +340,93 @@ p {
 .compact .equation-scroll {
   padding: 5px 2px;
 }
+.keypad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.key-label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.operator-keys {
+  display: grid;
+  grid-template-columns: repeat(20, minmax(0, 1fr));
+  gap: 10px;
+}
+.operator-key {
+  grid-column: span 5;
+  height: 50px;
+  padding: 0;
+  border: 0;
+  background: var(--wash);
+  border-radius: 999px;
+  font-size: 23px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.operator-key:nth-child(n + 5) {
+  grid-column: span 4;
+}
+.number-keys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.key {
+  min-width: 0;
+  height: 54px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.action-keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+.clear-key {
+  color: var(--coral-text);
+  font-size: 18px;
+}
+.equals-key {
+  height: 56px;
+  border: 0;
+  border-radius: 999px;
+  background: #84edce;
+  font-size: 30px;
+  font-weight: 800;
+}
+.fraction-key {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.09em;
+}
+.fraction-key i {
+  width: 0.44em;
+  height: 0.36em;
+  border: 0.08em solid currentColor;
+  border-radius: 0.09em;
+}
+.fraction-key b {
+  width: 0.76em;
+  height: 0.08em;
+  background: currentColor;
+  border-radius: 1em;
+}
 .compact .operator {
   background: none;
   width: auto;
@@ -347,6 +434,20 @@ p {
   font-size: 1em;
 }
 @media (max-width: 899px) {
+  .operator-key {
+    height: 44px;
+  }
+  .key {
+    height: 48px;
+  }
+  .equals-key,
+  .action-keys .key {
+    height: 50px;
+  }
+  .operator-keys,
+  .number-keys {
+    gap: 8px;
+  }
   .equation {
     font-size: 30px;
     --stroke: 2.4px;
