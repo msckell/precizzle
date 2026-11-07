@@ -1141,6 +1141,68 @@ While writing the evaluator, the assistant found that two rules of the SPEC disa
 |---|---|---|
 | In A × B% and A ÷ B%, which rule wins? | Like D7: one operation | D55 |
 
+**Status:** Milestones 2 and 3 were approved. The owner approved the push and [PR #4](https://github.com/msckell/precizzle/pull/4).
+
+#### Pull request and review
+
+##### CodeRabbit triage ([PR #4](https://github.com/msckell/precizzle/pull/4))
+
+| Finding | Selected answer | Final decision |
+|---|---|---|
+| D43 still lists `200 * 15%` and `200 / 15%` under "Anywhere else, B% = B ÷ 100", which D55 replaced | Keep the original text and mark D43 as partly superseded, as the log does for D1 and D11 | Commit `fe9d507` |
+
+**Fix.** Original (Spanish):
+
+> Prefiero mantener el historial de decisiones. Aplicá la primera alternativa, agregando la aclaración de que D55 reemplaza parcialmente D43.
+>
+> No modifiques el comportamiento matemático ni elimines las decisiones anteriores.
+>
+> Después hacé el commit, actualizá el PR #4 y respondé al comentario de CodeRabbit. Verificá que los checks sigan en verde y no hagas merge todavía.
+
+English translation:
+
+> I prefer to keep the decision history. Apply the first alternative, adding the note that D55 partly supersedes D43.
+>
+> Do not change the mathematical behavior or remove earlier decisions.
+>
+> Then make the commit, update PR #4 and reply to the CodeRabbit comment. Check that the checks stay green and do not merge yet.
+
+**Status:** CodeRabbit approved the pull request, and the thread was resolved.
+
+##### Merge
+
+Original (Spanish):
+
+> Perfecto, apruebo los dos primeros puntos.
+>
+> Registrá el cierre del PR y el triage de CodeRabbit en PROMPTS.md, hacé el commit y el push correspondiente.
+>
+> Una vez que CodeRabbit vuelva a aprobar la revisión y todos los checks estén en verde, te autorizo a mergear el PR #4 utilizando un merge commit.
+>
+> Después, actualizá main en C:\Projects\precizzle y verificá que todo haya quedado correctamente integrado.
+>
+> Por ahora prefiero conservar la rama feat/expression-api y su worktree. Los eliminaremos cuando terminemos de integrar y verificar el frontend con la API real.
+>
+> No modifiques el worktree del frontend. Cuando termines, preparame un resumen breve para pasarle al segundo agente, indicando que la API ya está integrada en main, cualquier cambio relevante del contrato y los pasos necesarios para sincronizar su rama.
+>
+> Después de eso, damos por cerrado el Bloque 2a.
+
+English translation:
+
+> Perfect, I approve the first two points.
+>
+> Record the PR closing and the CodeRabbit triage in PROMPTS.md, and make the corresponding commit and push.
+>
+> Once CodeRabbit approves the review again and all checks are green, I authorize you to merge PR #4 with a merge commit.
+>
+> Then, update main in C:\Projects\precizzle and check that everything was integrated correctly.
+>
+> For now I prefer to keep the feat/expression-api branch and its worktree. We will remove them once we finish integrating and checking the frontend against the real API.
+>
+> Do not modify the frontend worktree. When you are done, prepare a short summary for me to pass to the second agent, stating that the API is already integrated in main, any relevant contract change and the steps needed to sync its branch.
+>
+> After that, we consider Block 2a closed.
+
 ### 4.5 Part 2b: Frontend
 
 Branch `feat/frontend`, in the worktree `C:\Projects\precizzle-frontend`. Only the 2b session writes in this section.
