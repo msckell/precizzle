@@ -55,3 +55,35 @@ export function rowAt(root: Row, path: Path): Row | undefined {
   }
   return row;
 }
+
+export function isNumberChar(node: Node | undefined): boolean {
+  return node?.type === "char" && /^[0-9.]$/.test(node.char);
+}
+
+export function isChar(node: Node | undefined, char: Character): boolean {
+  return node?.type === "char" && node.char === char;
+}
+
+export function operandStart(row: Row, end: number): number {
+  let index = end;
+  while (
+    index > 0 &&
+    (row[index - 1].type === "pow" || isChar(row[index - 1], "%"))
+  )
+    index--;
+  if (isNumberChar(row[index - 1])) {
+    while (isNumberChar(row[index - 1])) index--;
+    return index;
+  }
+  const node = row[index - 1];
+  if (node?.type === "chip" || node?.type === "frac" || node?.type === "sqrt")
+    return index - 1;
+  if (isChar(node, ")")) {
+    let depth = 0;
+    for (let i = index - 1; i >= 0; i--) {
+      if (isChar(row[i], ")")) depth++;
+      if (isChar(row[i], "(") && --depth === 0) return i;
+    }
+  }
+  return end;
+}
