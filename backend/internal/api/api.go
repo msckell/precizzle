@@ -18,6 +18,7 @@ func NewHandler() http.Handler {
 		"/api/v1/power":      power(),
 		"/api/v1/sqrt":       sqrt(),
 		"/api/v1/percentage": percentage(),
+		"/api/v1/evaluate":   evaluate(),
 	}
 	for path, handler := range operations {
 		mux.Handle("POST "+path, handler)

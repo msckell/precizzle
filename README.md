@@ -44,7 +44,7 @@ npm run dev         # start the dev server
 
 ## Backend API
 
-The Go backend in `backend/` has no dependencies outside the standard library. The full contract, with every rule and error, is in [docs/SPEC.md](docs/SPEC.md#4-api-contract).
+The Go backend in `backend/` has no dependencies outside the standard library. The full contract, with every rule and error, is in [docs/SPEC.md](docs/SPEC.md#4-api-contract), and the expression rules are in [section 5](docs/SPEC.md#5-expressions).
 
 ### Running it
 
@@ -68,6 +68,7 @@ During development the frontend reaches the API through the Vite dev server prox
 | `POST /api/v1/power` | `{"base", "exponent"}` | base ^ exponent, with an integer exponent from −1000 to 1000 |
 | `POST /api/v1/sqrt` | `{"value"}` | √value |
 | `POST /api/v1/percentage` | `{"percent", "base"?, "operator"?}` | percent ÷ 100, or base `add`, `subtract`, `multiply` or `divide` percent% |
+| `POST /api/v1/evaluate` | `{"expression"}` | an expression with several operations, see [Expressions](#expressions) |
 | `GET /healthz` | none | `{"status": "ok"}` when the server is up |
 
 - Requests use `Content-Type: application/json`, and every number is a JSON string: `"0.1"`, `"1/3"`, `"1e-3"` or an approximate `"~1.4142135623730950488"`.
@@ -75,6 +76,27 @@ During development the frontend reaches the API through the Vite dev server prox
   - `value` is the exact result, to send back when chaining.
   - `decimal` is for display.
   - `kind` is `exact`, `repeating` or `approximate`.
+
+### Expressions
+
+`evaluate` computes an ASCII expression with the usual precedence. The frontend sends every calculation through it.
+
+- **Tokens:**
+  - Numbers without a sign (`12`, `0.5`, `1e-3`).
+  - Values in brackets, with any operand form (`[1/7]`, `[-2.5]`, `[~1.4142135623730950488]`). This is how a result goes back into an expression.
+  - The operators `+ - * / ^ %`, `sqrt(…)` and parentheses. Spaces may separate tokens.
+- **Precedence:**
+  - `^` groups from the right: `2^3^2` = 512.
+  - Unary minus binds below it: `-2^2` = −4.
+  - Then `*` and `/`, and then `+` and `-`, both from the left.
+  - There is no implicit multiplication: `2(3)` is an error.
+- **Percentages:** they follow the operand they belong to.
+  - `50+200+15%` = 50 + 230 = 280.
+  - `200+15%+10%` = 253.
+  - `(50+200)+15%` = 287.5.
+  - `200*15%` = 30, the same as the `percentage` endpoint.
+- **Every step follows the rules of the single operations**, so `10^50/10^20` is `result_too_large` and `sqrt(2)*sqrt(2)` is `~2`.
+- **Limits:** at most 100 operations, 10 of them powers, and 100 nested levels. Breaking a limit is `expression_too_complex`.
 
 ### Examples
 
@@ -100,6 +122,25 @@ curl -s http://127.0.0.1:8080/healthz
 # {"status":"ok"}
 ```
 
+Expressions:
+
+```sh
+curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "50+200+15%"}'
+# {"value":"280","decimal":"280","kind":"exact"}
+
+curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "1/3*3"}'
+# {"value":"1","decimal":"1","kind":"exact"}
+
+curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "1/7"}'
+# {"value":"1/7","decimal":"0.1428…1429","kind":"repeating"}
+
+curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "[1/7]*7"}'
+# {"value":"1","decimal":"1","kind":"exact"}
+
+curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "sqrt(2)*sqrt(2)"}'
+# {"value":"~2","decimal":"2","kind":"approximate"}
+```
+
 ### Errors
 
 Errors use RFC 9457 Problem Details (`application/problem+json`) with a stable `code` and, when one field is at fault, its name in `field`:
@@ -110,7 +151,15 @@ curl -s http://127.0.0.1:8080/api/v1/divide -H 'Content-Type: application/json' 
 # {"type":"https://github.com/msckell/precizzle/blob/main/docs/SPEC.md#division_by_zero","title":"Division by zero","status":422,"detail":"The divisor b is zero.","code":"division_by_zero","field":"b"}
 ```
 
-- `400` means the request must be fixed, for example `invalid_number` or `missing_field`.
+An error about an expression, or about one of its operations, has `position` instead of `field`: the 0-based index of the character at fault.
+
+```sh
+curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "(2+"}'
+# HTTP 400
+# {"type":"https://github.com/msckell/precizzle/blob/main/docs/SPEC.md#invalid_expression","title":"Invalid expression","status":400,"detail":"The expression cannot continue at position 3.","code":"invalid_expression","position":3}
+```
+
+- `400` means the request must be fixed, for example `invalid_number`, `missing_field` or `invalid_expression`.
 - `422` means the result does not exist or cannot be represented, for example `division_by_zero` or `result_too_large`.
 - `500 internal_error` means a bug in the server.
 
@@ -118,8 +167,9 @@ The [errors table](docs/SPEC.md#errors) lists every code.
 
 ### Tests and CI
 
-- **Tests:** `go test ./...` runs the table-driven tests. They cover every example and error in the SPEC, a fuzz target for the operand parser, and the HTTP layer through `httptest`.
-- **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every pull request and on `main`. It checks formatting with gofmt, runs `go vet`, runs the tests with the race detector, and fails when coverage drops below 95% in `internal/calc` or 90% in `internal/api`.
+- **Tests:** `go test ./...` runs the table-driven tests. They cover every example and error in the SPEC, the HTTP layer through `httptest`, and two fuzz targets: one for the operand parser and one for the expression evaluator.
+- **Benchmark:** the costliest expression that fits in a request takes about 0.85 s on an Intel i5-8400 (`go test -run='^$' -bench=EvaluateWorstCase ./internal/expr`).
+- **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every pull request and on `main`. It checks formatting with gofmt, runs `go vet`, runs the tests with the race detector, and fails when coverage drops below 95% in `internal/calc` or `internal/expr`, or 90% in `internal/api`.
 
 ## Design decisions
 

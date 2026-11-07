@@ -55,11 +55,12 @@ jobs:
             ' "$RUNNER_TEMP/test-output.txt")"
             echo "| $pkg | ${coverage:-missing}% | $minimum% |" >> "$GITHUB_STEP_SUMMARY"
             if [ -z "$coverage" ] || awk -v c="$coverage" -v m="$minimum" 'BEGIN { exit !(c < m) }'; then
-              echo "::error::$pkg coverage is ${coverage:-missing}%, below the minimum of $minimum% (D34)"
+              echo "::error::$pkg coverage is ${coverage:-missing}%, below the minimum of $minimum% (D34, D51)"
               status=1
             fi
           done <<'EOF'
           internal/calc 95
           internal/api 90
+          internal/expr 95
           EOF
           exit "$status"

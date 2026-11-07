@@ -110,3 +110,24 @@ func TestParseLimits(t *testing.T) {
 		})
 	}
 }
+
+func TestNumberResult(t *testing.T) {
+	tests := []struct {
+		operand string
+		want    Result
+	}{
+		{"5.0", Result{"5", "5", Exact}},
+		{"-0", Result{"0", "0", Exact}},
+		{"-0.50e1", Result{"-5", "-5", Exact}},
+		{"4/2", Result{"2", "2", Exact}},
+		{"1/4", Result{"0.25", "0.25", Exact}},
+		{"-2/6", Result{"-1/3", "-0." + strings.Repeat("3", 100), Repeating}},
+		{"~1.50", Result{"~1.5", "1.5", Approximate}},
+		{"~-3.2e-25", Result{"~-3.2e-25", "-3.2e-25", Approximate}},
+	}
+	for _, tt := range tests {
+		if got := num(t, tt.operand).Result(); got != tt.want {
+			t.Errorf("Parse(%q).Result() = %+v, want %+v", tt.operand, got, tt.want)
+		}
+	}
+}
