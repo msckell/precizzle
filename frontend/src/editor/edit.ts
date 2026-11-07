@@ -143,6 +143,7 @@ function splice(
   const row = rowAt(state.root, path)!;
   const next = [...row.slice(0, start), ...nodes, ...row.slice(start + count)];
   const normalized: Node[] = [];
+  let adjustedCursor = cursorIndex;
   let inNumber = false;
   let dot = false;
   for (let i = 0; i < next.length; i++) {
@@ -153,7 +154,7 @@ function splice(
         if (dot) return state;
         if (!inNumber) {
           normalized.push(charNode("0"));
-          if (i < cursorIndex) cursorIndex++;
+          if (i < cursorIndex) adjustedCursor++;
         }
         dot = true;
       }
@@ -166,7 +167,7 @@ function splice(
   }
   return {
     root: replaceRow(state.root, path, normalized),
-    cursor: { path, index: cursorIndex },
+    cursor: { path, index: adjustedCursor },
   };
 }
 
@@ -265,6 +266,7 @@ function unaryMinus(row: Row, index: number): boolean {
 export function toggleSign(state: EditorState): EditorState {
   const row = rowAt(state.root, state.cursor.path)!;
   let start = state.cursor.index;
+  if (unaryMinus(row, start)) return splice(state, start, 1, [], start);
   if (isNumberChar(row[start])) {
     while (isNumberChar(row[start - 1])) start--;
   } else start = operandStart(row, start);

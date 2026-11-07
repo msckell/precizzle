@@ -128,7 +128,7 @@ describe("serialization", () => {
     [chars("%"), "(%)"],
     [
       [...chars("2"), { type: "pow", exp: chars("3") }, ...chars("%")],
-      "(2^(3)%)",
+      "(2^(3))%",
     ],
     [[{ type: "sqrt", body: chars("2") }, ...chars("%")], "sqrt(2)%"],
     [[...fraction(chars("1"), chars("3")), ...chars("%")], "((1)/(3))%"],
@@ -206,6 +206,31 @@ describe("serialization", () => {
       index: 3,
     });
   });
+  it.each([
+    [
+      [...chars("2"), { type: "pow", exp: chars("3") }, ...chars("%")],
+      "(2^(3))%",
+    ],
+    [[...chars("2"), { type: "pow", exp: chars("3%") }], "2^(3%)"],
+    [
+      [
+        ...chars("2"),
+        { type: "pow", exp: chars("3") },
+        ...chars("%"),
+        { type: "pow", exp: chars("2") },
+      ],
+      "(2^(3))%^(2)",
+    ],
+    [
+      [...chars("-2"), { type: "pow", exp: chars("3") }, ...chars("%")],
+      "-(2^(3))%",
+    ],
+  ] satisfies [Row, string][])(
+    "preserves which operand owns the percentage: %j",
+    (row, expected) => {
+      expect(serialize(row).text).toBe(expected);
+    },
+  );
   it.each([-1, 0.5, 10, NaN])(
     "rejects an out-of-range position %s",
     (position) => {

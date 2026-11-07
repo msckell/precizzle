@@ -21,12 +21,7 @@ export interface Serialized {
 
 function barePercentage(row: Row): boolean {
   const end = row.length - 1;
-  if (
-    !isChar(row[end], "%") ||
-    row[end - 1]?.type === "pow" ||
-    isChar(row[end - 1], "%")
-  )
-    return false;
+  if (!isChar(row[end], "%") || isChar(row[end - 1], "%")) return false;
   const start = operandStart(row, end);
   return start < end && row.slice(0, start).every((node) => isChar(node, "-"));
 }
@@ -46,14 +41,15 @@ export function serialize(root: Row): Serialized {
     if (grouped) write(")", element);
   };
   const visit = (row: Row, path: Path) => {
-    // A second exponent attaches to the whole preceding power, not its exponent.
+    // A following power or percentage belongs to the whole power, not its exponent.
     const groups = row.flatMap((node, index) => {
+      if (
+        (node.type !== "pow" && !isChar(node, "%")) ||
+        row[index - 1]?.type !== "pow"
+      )
+        return [];
       const start = operandStart(row, index);
-      return node.type === "pow" &&
-        row[index - 1]?.type === "pow" &&
-        start < index
-        ? [{ start, end: index }]
-        : [];
+      return start < index ? [{ start, end: index }] : [];
     });
     row.forEach((node, index) => {
       const element: Element = { type: "node", path, index };

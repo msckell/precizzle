@@ -18,6 +18,9 @@ import {
 } from "./edit.ts";
 
 describe("insertion", () => {
+  it("keeps the cursor before the repaired right-hand number when splitting a decimal", () => {
+    expect(insertOperator(state("1.2", 1), "+")).toEqual(state("1+0.2", 2));
+  });
   it.each([
     ["", 0, "0."],
     ["0", 1, "0."],
@@ -139,6 +142,15 @@ describe("insertion", () => {
 });
 
 describe("deletion and signs", () => {
+  it("toggles a unary sign when the cursor is immediately before it", () => {
+    expect(toggleSign(state("-12", 0))).toEqual(state("12", 0));
+  });
+  it("does not remove a selected structure when typing at its cursor", () => {
+    const original = state([{ type: "sqrt", body: chars("2") }]);
+    const changed = insertDigit(backspace(original), "3");
+    expect(changed.root).toEqual([...original.root, ...chars("3")]);
+    expect(changed.selected).toBeUndefined();
+  });
   it.each([
     { type: "frac", num: chars("1"), den: chars("2") },
     { type: "sqrt", body: chars("2") },
