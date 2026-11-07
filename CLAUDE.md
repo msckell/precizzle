@@ -72,5 +72,8 @@ Frontend, run from `frontend/` after `npm ci`:
 - Format check: `npm run format:check` (fix with `npm run format`)
 - Typecheck: `npm run typecheck`
 - Test: `npm test`
+- Coverage: `npm run coverage` (fails below 90% of statements)
 - Build: `npm run build`
-- Run: `npm run dev`
+- Run: `npm run dev` (serves on `localhost:5173` and proxies `/api` to the backend, which must be running on `127.0.0.1:8080`)
+
+CI runs `npm ci`, lint, the format check, typecheck, coverage and build in the `frontend` job.

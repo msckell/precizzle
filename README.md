@@ -42,6 +42,69 @@ npm run dev         # start the dev server
   - Forcing version 11 with npm `overrides` works in a local test, but it goes outside the versions ESLint supports, so it is not applied.
   - The advisory goes away when ESLint moves to `minimatch` 11.
 
+## Frontend
+
+The React and TypeScript app in `frontend/` is a calculator built around an editable equation. It does no arithmetic: every result comes from `POST /api/v1/evaluate`.
+
+### Running it
+
+The backend and the dev server each keep running in their own terminal. Open two terminals at the repository root.
+
+In the first one, start the backend and leave it running:
+
+```sh
+cd backend
+go run .              # API on http://127.0.0.1:8080
+```
+
+In the second one, start the frontend:
+
+```sh
+cd frontend
+npm ci                # first time, or after the dependencies change
+npm run dev           # app on http://localhost:5173
+```
+
+The Vite dev server proxies `/api` to `127.0.0.1:8080`, so the backend must be running before the first calculation. `npm run build` writes the production app to `frontend/dist/`.
+
+### Using it
+
+- The calculation is an expression with a cursor. Click or tap between characters to place it, and type anywhere in the expression.
+- ÷ draws a stacked fraction and takes the number before the cursor as its numerator; xʸ takes it as the base; √ inserts an empty root. A visible × is added where a √, a `(` or a reused result would otherwise touch a number.
+- Backspace or Delete next to a fraction, root or exponent first selects all of it, and a second press deletes it.
+- After a result, an operator continues from it, and a digit starts a new calculation.
+- The history keeps the last 100 calculations in the browser. "Load" restores an expression and its result, "Use" inserts a result at the cursor, and "Clear history" asks for confirmation first.
+
+The physical keyboard works anywhere on the page, except while the history is open:
+
+| Key | Action |
+|---|---|
+| `0`–`9`, `.` | Digits and the decimal point |
+| `+`, `-`, `*`, `%`, `(`, `)` | +, −, ×, %, `(` and `)` |
+| `/` | ÷ (fraction) |
+| `^` | xʸ |
+| `r` | √ |
+| Enter, `=` | Evaluate |
+| Backspace, Delete | Delete before or after the cursor |
+| Arrow keys, Home, End | Move the cursor; Up and Down move between numerator and denominator, and into and out of an exponent |
+| Escape | Clear the expression, or close the history |
+
+Keys pressed with Ctrl, Meta or Alt are left to the browser.
+
+### Design notes
+
+- **Equation.** A white page, the expression drawn as math (stacked fractions, roots, raised exponents) and the result in its own mint card. A purple box follows the part being edited. Long expressions stay on one line and scroll sideways.
+- **Exact values in chips.** Chaining or reusing a result inserts a chip that shows the short decimal but keeps the exact `value`, such as `1/3`, so 1 ÷ 3 × 3 is exactly 1. Approximate chips are orange and marked with ≈.
+- **Display rules.** Results are truncated, never rounded. Repeating results show 4 decimals and other long results 5, followed by "…"; each click on "…" shows 20, 40, 60, 80 and then 100 digits. Copy puts the full `decimal` on the clipboard. Tiny results use scientific notation.
+- **Errors in place.** An error marks the part of the expression at fault, for example the fraction bar of a division by zero, and explains how to fix it.
+- **Accessibility.** Every key has an accessible name, focus is visible, the expression is read as a whole, and results and errors are announced to screen readers.
+
+### Tests and CI
+
+From `frontend/`, `npm test` runs Vitest. Unit tests cover the editor, the serializer and its position map, the result formatting, the API client and the history storage. Integration tests render the app with React Testing Library and user-event, and Mock Service Worker answers `evaluate` from fixtures that match the real API. `npm run coverage` fails below 90% of statements.
+
+The `frontend` job in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `npm ci`, ESLint, the Prettier check, the type check, the tests with coverage and the build on every pull request and on `main`.
+
 ## Backend API
 
 The Go backend in `backend/` has no dependencies outside the standard library. The full contract, with every rule and error, is in [docs/SPEC.md](docs/SPEC.md#4-api-contract), and the expression rules are in [section 5](docs/SPEC.md#5-expressions).
