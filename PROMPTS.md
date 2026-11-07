@@ -909,6 +909,130 @@ Before closing the specification, the assistant checked the corrected percentage
 
 Branch `feat/expression-api`, in the worktree `C:\Projects\precizzle-expression-api`. Only the 2a session writes in this section.
 
+#### Starting prompt
+
+Block plan: [docs/plans/block-2a-expression-api.md](docs/plans/block-2a-expression-api.md)
+
+Original (English):
+
+> I want to resume development of Precizzle, my personal full-stack calculator project, after clearing the previous conversation context.
+>
+> You are responsible for **Block 2a: Expression API**.
+>
+> Your designated working directory is:
+>
+> `C:\Projects\precizzle-expression-api`
+>
+> Your branch is:
+>
+> `feat/expression-api`
+>
+> Another Claude Code agent will independently develop Block 2b (Frontend) in a separate Git worktree. Do not modify its directory or branch.
+>
+> ### 1. Restore the project context
+>
+> Before making any changes, carefully read:
+>
+> - `CLAUDE.md`, especially the parallel development rules.
+> - `docs/prompts/00-master-prompt.md`.
+> - `docs/SPEC.md`, including D39–D50 and Section 5.
+> - The relevant existing plans in `docs/plans/`.
+> - `PROMPTS.md`.
+> - `C:\Projects\precizzle-design\block-2-handoff.md`.
+> - The relevant Git history and current branch status.
+>
+> Verify the current worktree, Git branch, working tree cleanliness, and the status of the shared documentation PR.
+>
+> If this Claude session was launched from another directory, do not switch branches in that worktree. Tell me how to relaunch it in the designated backend directory.
+>
+> Treat the repository's approved specifications as the source of truth.
+>
+> Do not make assumptions about completed work. Verify the actual project state.
+>
+> ### 2. Your responsibilities
+>
+> Implement the expression evaluation backend according to the approved specification.
+>
+> The new endpoint is:
+>
+> `POST /api/v1/evaluate`
+>
+> It must support mathematical expressions with correct operator precedence, parentheses, powers, roots, percentages, exact fractions, validation, complexity limits, and structured errors.
+>
+> Preserve the existing mathematical precision guarantees and the behavior of all seven existing endpoints.
+>
+> The shared contract and product decisions are already defined. Do not reopen settled decisions unless you discover a genuine technical problem.
+>
+> Pay particular attention to the approved percentage behavior, including:
+>
+> - `50 + 200 + 15% = 280`
+> - `50 - 200 + 15% = -180`
+> - `200 + 15% + 10% = 253`
+> - `(50 + 200) + 15% = 287.5`
+>
+> Follow the exact grammar, validation rules, error formats, and evaluation semantics documented in the specification.
+>
+> ### 3. Coordinate with the frontend
+>
+> The frontend agent is developing against the same API contract using mocked responses.
+>
+> Do not modify frontend files.
+>
+> If you discover that the shared API contract must change, stop and ask for my approval before making changes.
+>
+> Respect the file ownership rules established in `CLAUDE.md`.
+>
+> If the shared documentation PR has not been merged, you may proceed with the interview and planning, but do not begin implementation against an unapproved or changing contract.
+>
+> ### 4. Continue the development workflow
+>
+> Resume exactly where the previous session stopped.
+>
+> The next step is the short backend interview covering the remaining technical decisions, including parser architecture, test coverage, and performance benchmarks.
+>
+> Ask only the questions that are genuinely unresolved.
+>
+> After the interview, enter Plan Mode and prepare the implementation plan for Block 2a.
+>
+> Follow our established workflow:
+>
+> - Approved plan before implementation.
+> - Clear checkpoints.
+> - Focused commits.
+> - Automated tests and coverage verification.
+> - CodeRabbit review.
+> - No push, PR creation, or merge without my explicit authorization.
+>
+> Preserve the established documentation and prompt logging conventions.
+>
+> ### 5. Start now
+>
+> First, give me a concise status report confirming:
+>
+> 1. Which worktree and branch you are using.
+> 2. What has already been completed.
+> 3. Whether the shared documentation PR is pending, approved, or merged.
+> 4. What remains to be done for Block 2a.
+>
+> Then proceed with the pending backend interview.
+>
+> Do not repeat questions that were already answered in the approved specification.
+
+#### Interview and the review of the shared base
+
+PR #3, the shared base, was still open with two Minor findings from CodeRabbit. The assistant verified both against the SPEC and asked about them in the same round as the backend questions.
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| PR #3: in `(2+`, does `invalid_expression` point to the missing operand (3) or to the unclosed `(` (0)? | The missing operand wins: 3 | Commit `e4e9041` on `docs/block-2-contract` |
+| PR #3: should D41 say that `position` replaces `field` only in errors about the expression? | Yes, rewrite D41, without the hyphen in "out of scope list" | Commit `752f983` on `docs/block-2-contract` |
+| Where do the parser and the evaluator live, and what coverage does CI require? | New `internal/expr` package, 95% | D51 |
+| Which performance and robustness checks does the parser get? | A worst-case benchmark and a fuzz target run with `go test` | D52 |
+
+The assistant decided how `api` maps errors with `position` (D53). The owner approved the two fixes, the push of `docs/block-2-contract` and the replies on both CodeRabbit threads, which were then resolved.
+
+**Status:** The owner approved the plan, including D54, the position rules that SPEC §5 leaves open: [docs/plans/block-2a-expression-api.md](docs/plans/block-2a-expression-api.md).
+
 ### 4.5 Part 2b: Frontend
 
 Branch `feat/frontend`, in the worktree `C:\Projects\precizzle-frontend`. Only the 2b session writes in this section.

@@ -554,6 +554,10 @@ Decisions taken while building the expression API, numbered from D51.
 
 | # | Decision | Reason |
 |---|---|---|
+| D51 | The tokenizer, the recursive descent parser and the evaluator live in a new package, `backend/internal/expr`. Every operation calls the function of `internal/calc` that computes it alone. CI fails when statement coverage of `internal/expr` drops below 95%. | The grammar and the positions stay apart from the number model, and `calc` keeps its exact rules (D44). The parser is calculation logic, so it gets the threshold of `internal/calc` (D34). |
+| D52 | `BenchmarkEvaluateWorstCase` measures the costliest expression that fits in the 64 KiB body: 10 worst-case powers and 90 more operations. It runs by hand, like `BenchmarkPowerWorstCase`. `FuzzEvaluate` checks that any input gives a result or an error with a valid `position`, never a panic; CI runs only its seed corpus. | The benchmark confirms the cost behind D45. Fuzzing covers inputs nobody wrote by hand, and a seed-only run keeps CI fast and deterministic. |
+| D53 | `expr` returns an error that holds a cause and a `position`. The cause is a sentinel error of `calc` or one of the two new ones, for `invalid_expression` and `expression_too_complex`. `api` maps the cause with `errors.Is`, as for the other endpoints, and writes `position` in place of `field`. Any other error is `internal_error` (D37). | One mapping style for the whole API, and `expr` knows nothing about HTTP. |
+| D54 | Position rules that [Expression errors](#expression-errors) leaves open: a token is checked only when the grammar accepts it there, so `2 1.2.3` is `invalid_expression` at 2; `sqrt(` is matched character by character, so `sqrx(4)` points to 3 and `sqrt (4)` to 4; with several unclosed groups the innermost is reported, so `((2+3` points to 1; and when both limits of D45 are broken, the earlier of the 101st operation and the 11th power is reported. | Each rule follows "the first character that cannot continue the expression" and the left-to-right check order. None changes an example of the SPEC. |
 
 ### Block 2b: Frontend
 
