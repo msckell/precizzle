@@ -1674,3 +1674,188 @@ Verification from `frontend/`:
 - The cancellation-during-body-read test retains the MSW request and injects the read failure after transport completion: aborting a streaming MSW response directly triggered an unrelated Undici assertion. The client behavior remains covered without suppressing unhandled errors.
 
 **Status:** Milestone 2 complete, awaiting the owner's checkpoint review before Milestone 3. No backend implementation changes, push or PR. `AGENTS.md` still matches `CLAUDE.md` exactly. The temporary browser mock remains scheduled for removal before the frontend PR; ordinary functional verification uses the real API.
+
+#### Milestone 3 continuation after the usage limit
+
+The previous session paused Milestone 3 and left `docs/handoffs/block-2b-milestone-3.md`. The owner resumed it with this prompt (written in English):
+
+> I'm continuing the development of Precizzle, my full-stack calculator project, after reaching the usage limit in my previous coding session.
+>
+> The previous agent was implementing **Block 2b — Frontend, Milestone 3**, but had to stop before completing it.
+>
+> I want you to recover the project state and continue exactly where the previous agent left off, without restarting completed work.
+>
+> ### 1. Working directory
+>
+> The project is located at:
+>
+> `C:\Projects\precizzle-frontend`
+>
+> The active branch is:
+>
+> `feat/frontend`
+>
+> Work exclusively in this worktree. Do not modify the backend worktree or switch to another branch.
+>
+> ### 2. Recover the context
+>
+> Before making changes, read:
+>
+> - `AGENTS.md`
+> - `docs/SPEC.md`
+> - `docs/plans/block-2b-frontend.md`
+> - `docs/handoffs/block-2b-milestone-3.md`
+> - The relevant sections of `PROMPTS.md`
+> - The recent Git history and working tree status.
+>
+> The handoff document is particularly important because it contains the previous agent's progress, remaining tasks, and continuation instructions.
+>
+> Verify whether the handoff document and all recent changes were committed successfully. The previous session ended while preparing its final handoff, so there may be uncommitted changes.
+>
+> Preserve any existing work. Do not reset, discard, or overwrite changes.
+>
+> Treat the approved specification, implementation plan, and repository instructions as the source of truth.
+>
+> ### 3. Current development status
+>
+> Milestones 1 and 2 are completed.
+>
+> Milestone 3 is partially implemented.
+>
+> The previous agent reported that the following components are already implemented:
+>
+> - Mathematical expression editor and cursor.
+> - Editable mathematical structures.
+> - Keypad and physical keyboard integration.
+> - Communication with the real backend.
+> - Two-step deletion of mathematical structures.
+> - Chaining results and starting new calculations.
+> - ResultCard with progressive decimal expansion, copying, and editing states.
+> - API error handling and positioned error messages.
+>
+> The previous agent was verifying the error handling integration before stopping.
+>
+> The latest reported verification results were:
+>
+> - 368 passing tests.
+> - 94.97% statement coverage.
+> - 70 fixtures matching the real backend.
+> - Passing lint, formatting, type checking, and build.
+>
+> These results describe the previous checkpoint. Verify the current state rather than assuming everything remains unchanged.
+>
+> ### 4. Remaining Milestone 3 work
+>
+> According to the previous agent, the main remaining tasks are:
+>
+> **HistoryPanel**
+> - Implement the approved calculation history interface.
+> - Connect it to the existing history logic.
+> - Support Load, Use, and Clear History with confirmation.
+> - Follow the approved desktop and mobile behavior.
+>
+> **Header**
+> - Implement the approved Precizzle branding.
+> - Include the multicolored ribbon-style P.
+> - Incorporate the approved subtle decorative elements.
+> - Preserve the existing Equation design direction.
+>
+> **Final UI integration**
+> - Complete the remaining visual and functional integration.
+> - Verify the expression editor, keypad, ResultCard, HistoryPanel, and Header work together correctly.
+> - Test responsive layouts, keyboard interactions, editing behavior, and error messages.
+> - Compare the final interface against the approved mockup.
+>
+> The visual references are available under:
+>
+> `C:\Projects\precizzle-design\`
+>
+> Consult the handoff document for the exact mockup location.
+>
+> Do not redesign the application or introduce additional features.
+>
+> ### 5. Continue implementation
+>
+> Once you have recovered the context and verified the current state, continue implementing the remaining tasks of Milestone 3.
+>
+> Follow the existing approved plan.
+>
+> Prioritize completing the application rather than reopening previously settled decisions.
+>
+> Reuse the logic and components already implemented.
+>
+> Maintain the existing mathematical precision, expression editing behavior, API contract, and design decisions.
+>
+> Do not modify backend implementation files.
+>
+> ### 6. Quality requirements
+>
+> Follow the existing project standards:
+>
+> - Automated tests for relevant behavior.
+> - Required coverage thresholds.
+> - ESLint.
+> - Prettier.
+> - TypeScript checks.
+> - Production build verification.
+> - Integration testing against the real backend.
+>
+> Add appropriate tests for the remaining components and interactions.
+>
+> Fix any regressions introduced by the new implementation.
+>
+> Preserve the existing Git history and use focused, descriptive commits.
+>
+> ### 7. Checkpoints and permissions
+>
+> Follow the workflow defined in `AGENTS.md`.
+>
+> You may continue implementing Milestone 3 because its plan has already been approved.
+>
+> Do not start a new interview or planning phase unless you discover a genuine technical blocker requiring my decision.
+>
+> Do not push, create pull requests, merge branches, or begin the next milestone without my explicit authorization.
+>
+> When Milestone 3 is complete:
+>
+> 1. Run all required checks.
+> 2. Save the completed work in local commits.
+> 3. Confirm the working tree is clean.
+> 4. Update the relevant documentation and prompt log.
+> 5. Present the completed components, test results, coverage, and any remaining limitations.
+> 6. Stop at the milestone checkpoint for my review.
+>
+> ### 8. Start now
+>
+> First, briefly confirm that you have recovered the project context, inspected the handoff document, and verified the Git state.
+>
+> Then continue directly with the unfinished Milestone 3 implementation.
+>
+> Do not repeat completed work or ask me to approve decisions that have already been documented.
+>
+> My priority is to finish the frontend efficiently while maintaining the quality of the existing implementation.
+
+State found on resumption: every implementation commit through `8dfc40c` was in place; only the handoff document was untracked. It is committed unchanged as the record of the pause. The paused state passed lint, format, typecheck and coverage (368 tests, 94.97% statements).
+
+#### Milestone 3 checkpoint
+
+Implemented after the pause, in the plan's commits 6 and 7:
+
+- **`Header`:** the ribbon P from the approved mockup as an inline SVG named "P", the word, and the History button with its count. On mobile the button becomes an icon on the left and the brand is centered, as in the mockup.
+- **`HistoryPanel`:** compact read-only equations with the result (`= value…`, or the "Approx." tag and ≈), Load, Use, the "Saved on this device, up to 100." note, an empty state, and Clear history with the inline confirmation. It replaces the keypad column on desktop and fills the screen on mobile. Opening it focuses Close; Escape, Close, Load and Use return focus to the History button; Cancel returns focus to Clear history. Load and Use abort a pending evaluation, and the reducer already rejects a stale completion.
+- **Decorations:** the mint, coral to amber and peach waves from the mockup, behind the content and hidden from assistive technology, repeated in the full-screen mobile history. Gradient ids come from `useId`.
+
+Implementation details: the confirmation reads "Delete 1 calculation?" for a single entry and "Delete all N calculations?" otherwise. Load, Use and Clear history keep a 44 px minimum height, like the Copy button, instead of the mockup's 36 px. The mobile header has no extra copy icon; the result card keeps its Copy button. The History count badge is hidden when the history is empty.
+
+Verification from `frontend/`:
+
+- `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run build` and `git diff --check`: passed.
+- `npm run coverage`: 12 files and 379 tests passed; 99% statements, 96.73% branches, 100% functions, 99.27% lines. `state.ts` rose from 66.66% to 97.91%; the remaining lines are the stale-response guard and the network-failure catch, both unreachable from the UI once a request is aborted.
+- New integration tests: Load restores a fraction and its result and then chains `[1/3]*3`; Use inserts the approximate √2 chip and sends `1500*[~1.4142135623730950488]`; Clear asks, cancels, then empties the list and `localStorage`; calculator keys are ignored while the history is open; Escape and Close return focus; the history survives a remount; Load, Use and an edit each abort a pending request and ignore its late answer; arrow keys, Home and End move through fractions and exponents; ± and xʸ from the keypad; clicking the evaluated expression dims the result.
+- Browser walkthrough against the real backend through the Vite proxy (Chrome, keyboard only): compound interest `1000 × (1 + 5/100)^12` gives `1795.85632…` Exact; `250 + 1 ÷ (3 − 3)` marks the fraction bar with the callout under it; `50 + 200 + 15%` gives 280; √2 is approximate with ≈ and Use gives `≈2121.32034…`; `0.3^90` shows `8.72796… × 10⁻⁴⁸`; a 70-digit expression scrolls sideways with both edge fades and the `result_too_large` error marks the ×; no console errors.
+- Layout: no horizontal page scroll at 390 and 360 px. Screenshots at 1280×800 and 390×844 were taken with headless Chrome; the mobile one goes through a 390 px iframe because headless Chrome enforces a wider minimum window.
+- `src/mocks/handlers.ts` did not change, so the 70 fixtures still match the real API as verified at the pause.
+
+Known limitation for the owner: "Use" right after a bare number (for example `4` then Use) places the chip next to the number without a ×, as the Milestone 2 editor does, so `=` returns a positioned `invalid_expression`. D46 adds the visible × only for √ and `(`; extending it to chips would be a new decision.
+
+**Status:** Milestone 3 complete, awaiting the owner's checkpoint review before Milestone 4. No backend changes, push or PR. `AGENTS.md` still matches `CLAUDE.md` exactly.
