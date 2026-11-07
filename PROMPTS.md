@@ -905,6 +905,72 @@ Before closing the specification, the assistant checked the corrected percentage
 
 **Status:** D43 and D46 were corrected, and D50 records the details of the `evaluate` contract. The shared base, branch `docs/block-2-contract`, holds D39 to D50 and the contract in [docs/SPEC.md](docs/SPEC.md#5-expressions). Both parts start from it, and `CLAUDE.md` assigns the shared files.
 
+**Approval, push and handoff.** Original (Spanish), pasted as Markdown:
+
+> Perfecto. Apruebo la organización del desarrollo paralelo y las decisiones compartidas que acabamos de documentar.
+>
+> Antes de cerrar esta sesión y limpiar el contexto, quiero que hagas lo siguiente:
+>
+> 1. Publicá la rama `docs/block-2-contract` y abrí el Pull Request correspondiente para que CodeRabbit revise la especificación compartida, las decisiones D39–D50 y el contrato de `/api/v1/evaluate`.
+>
+> 2. No hagas merge del PR sin mi autorización. Si aparecen observaciones de CodeRabbit, dejalas identificadas para resolverlas en la siguiente sesión.
+>
+> 3. Creá un archivo de transferencia de contexto en `C:\Projects\precizzle-design\block-2-handoff.md`. Este archivo debe permitir que dos agentes nuevos continúen trabajando sin depender de la memoria de esta conversación.
+>
+> Incluí:
+> - Estado general del proyecto y bloques completados.
+> - Arquitectura actual y decisiones técnicas importantes.
+> - Estado de las ramas, worktrees, commits y PRs.
+> - Contrato de la API de expresiones y decisiones compartidas.
+> - Separación de responsabilidades entre backend y frontend.
+> - Archivos de documentación que deben consultar.
+> - Verificaciones realizadas y resultados.
+> - Trabajo pendiente y próximos checkpoints.
+> - Restricciones de Git, commits, revisiones y aprobaciones.
+> - Cualquier detalle importante de esta sesión que no esté documentado.
+>
+> 4. Verificá que ambos worktrees estén preparados y que los cambios importantes estén guardados. No modifiques las especificaciones matemáticas aprobadas ni comiences nuevas implementaciones.
+>
+> 5. Presentame un resumen final breve con el enlace del PR, el estado de Git, la ubicación del archivo de transferencia y los próximos pasos para cada agente.
+>
+> Después de completar esto, detené el trabajo. Voy a limpiar el contexto y comenzar dos sesiones independientes, una para backend y otra para frontend.
+>
+> No avances con la entrevista del backend en esta sesión. La retomaremos después de limpiar la memoria.
+
+English translation:
+
+> Perfect. I approve the organization of the parallel development and the shared decisions we just documented.
+>
+> Before closing this session and clearing the context, I want you to do the following:
+>
+> 1. Publish the `docs/block-2-contract` branch and open the corresponding Pull Request, so that CodeRabbit reviews the shared specification, decisions D39–D50 and the `/api/v1/evaluate` contract.
+>
+> 2. Do not merge the PR without my authorization. If CodeRabbit makes observations, leave them identified so they can be resolved in the next session.
+>
+> 3. Create a context handoff file at `C:\Projects\precizzle-design\block-2-handoff.md`. This file must let two new agents keep working without depending on the memory of this conversation.
+>
+> Include:
+> - The general state of the project and the completed blocks.
+> - The current architecture and the important technical decisions.
+> - The state of the branches, worktrees, commits and PRs.
+> - The expression API contract and the shared decisions.
+> - The split of responsibilities between backend and frontend.
+> - The documentation files they must read.
+> - The checks performed and their results.
+> - Pending work and the next checkpoints.
+> - The Git, commit, review and approval constraints.
+> - Any important detail of this session that is not documented.
+>
+> 4. Verify that both worktrees are ready and that the important changes are saved. Do not change the approved mathematical specifications or start new implementations.
+>
+> 5. Give me a brief final summary with the PR link, the Git state, the location of the handoff file and the next steps for each agent.
+>
+> After completing this, stop working. I will clear the context and start two independent sessions, one for the backend and one for the frontend.
+>
+> Do not move forward with the backend interview in this session. We will resume it after clearing the memory.
+
+**Status:** The shared base was pushed and its pull request opened for the CodeRabbit review. The handoff file lives outside the repository, next to the mockups.
+
 ### 4.4 Part 2a: Expression API
 
 Branch `feat/expression-api`, in the worktree `C:\Projects\precizzle-expression-api`. Only the 2a session writes in this section.
