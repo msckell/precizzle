@@ -32,6 +32,12 @@ export function formatResult(result: Result, expansion: Expansion = 0) {
   };
 }
 
+export function expansionCaption(result: Result, expansion: Expansion): string {
+  const { mantissa } = splitDecimal(result.decimal);
+  const total = Math.min(100, mantissa.split(".")[1]?.length ?? 0);
+  return `Showing ${formatResult(result, expansion).shownDecimals} of ${total} decimals`;
+}
+
 export function chipText(result: Result): string {
   return (result.kind === "approximate" ? "≈" : "") + formatResult(result).text;
 }

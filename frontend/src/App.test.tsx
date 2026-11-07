@@ -170,6 +170,9 @@ describe("results", () => {
       expect(
         screen.getByText(`Showing ${count} of 100 decimals`),
       ).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        new RegExp(`^Showing ${count} of 100 decimals\\.$`),
+      );
       expect(screen.getByTestId("result-value").textContent).toBe(
         "0." + "3".repeat(count) + (count < 100 ? "…" : ""),
       );
@@ -225,6 +228,9 @@ describe("results", () => {
       screen.getByRole("button", { name: "Show more decimals" }),
     );
     expect(screen.getByText("Showing 19 of 19 decimals")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /^Showing 19 of 19 decimals\.$/,
+    );
     expect(
       screen.queryByRole("button", { name: "Show more decimals" }),
     ).not.toBeInTheDocument();

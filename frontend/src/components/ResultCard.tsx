@@ -1,5 +1,5 @@
 import type { Result } from "../editor/model.ts";
-import { formatResult, splitDecimal } from "../format.ts";
+import { expansionCaption, formatResult } from "../format.ts";
 import type { Expansion } from "../format.ts";
 
 interface Props {
@@ -28,10 +28,6 @@ export function ResultCard({
       </section>
     );
   const display = formatResult(result, expansion);
-  const total = Math.min(
-    100,
-    splitDecimal(result.decimal).mantissa.split(".")[1]?.length ?? 0,
-  );
   return (
     <section
       className={`result-card${dimmed ? " dimmed" : ""}`}
@@ -86,9 +82,7 @@ export function ResultCard({
         )}
       </div>
       {expansion > 0 && (
-        <p className="decimal-caption">
-          Showing {display.shownDecimals} of {total} decimals
-        </p>
+        <p className="decimal-caption">{expansionCaption(result, expansion)}</p>
       )}
       {copyStatus === "failed" && (
         <p className="copy-error">Could not copy. Try again.</p>

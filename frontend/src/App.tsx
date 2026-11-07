@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useRef } from "react";
 import { evaluate } from "./api.ts";
 import { serialize } from "./editor/serialize.ts";
-import { formatResult } from "./format.ts";
+import { expansionCaption, formatResult } from "./format.ts";
 import { save } from "./history.ts";
 import { initialState, reducer } from "./state.ts";
 import type { Command } from "./state.ts";
@@ -128,8 +128,10 @@ function App() {
             : state.phase === "pending"
               ? "Calculating…"
               : state.phase === "result" && state.result
-                ? // The card's abbreviated text: reading all 100 digits of a repeating result would block the reader.
-                  `${state.result.kind}: ${formatResult(state.result).text}`
+                ? // Short text only: reading up to 100 digits would block the reader, and the card holds them.
+                  state.expansion > 0
+                  ? `${expansionCaption(state.result, state.expansion)}.`
+                  : `${state.result.kind}: ${formatResult(state.result).text}`
                 : ""}
       </p>
     </main>

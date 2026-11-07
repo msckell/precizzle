@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Kind, Result } from "./editor/model.ts";
-import { chipText, formatResult, splitDecimal } from "./format.ts";
+import {
+  chipText,
+  expansionCaption,
+  formatResult,
+  splitDecimal,
+} from "./format.ts";
 import type { Expansion } from "./format.ts";
 
 const result = (decimal: string, kind: Kind = "exact"): Result => ({
@@ -80,5 +85,30 @@ describe("display formatting", () => {
     [result("-2"), "-2"],
   ])("builds a short chip label", (input, expected) =>
     expect(chipText(input)).toBe(expected),
+  );
+  it.each<[Result, Expansion, string]>([
+    [
+      result("0." + "3".repeat(100), "repeating"),
+      1,
+      "Showing 20 of 100 decimals",
+    ],
+    [
+      result("0." + "3".repeat(100), "repeating"),
+      5,
+      "Showing 100 of 100 decimals",
+    ],
+    [
+      result("1.4142135623730950488", "approximate"),
+      1,
+      "Showing 19 of 19 decimals",
+    ],
+    [result("0." + "1".repeat(150)), 5, "Showing 100 of 100 decimals"],
+    [
+      result("3." + "3".repeat(100) + "e-31", "repeating"),
+      2,
+      "Showing 40 of 100 decimals",
+    ],
+  ])("captions an expanded result", (input, expansion, expected) =>
+    expect(expansionCaption(input, expansion)).toBe(expected),
   );
 });

@@ -228,6 +228,7 @@ export function reducer(state: AppState, action: Action): AppState {
             expansion:
               formatResult(state.result, state.expansion).nextExpansion ??
               state.expansion,
+            copyStatus: "",
           }
         : state;
     case "copied":
