@@ -28,12 +28,18 @@ Percentage rules, where B% means B ÷ 100 (D7):
 | A × B% | A × B ÷ 100 | 200 × 15% = 30 |
 | A ÷ B% | A ÷ (B ÷ 100) | 200 ÷ 15% = 4000/3 = 1333.33… |
 
+Expressions combine these operations with parentheses and the usual precedence (D41, D42). Inside an expression, a percentage after + or − applies to the term right before it, so 50 + 200 + 15% = 50 + 230 = 280 (D43). The rules are in [Expressions](#5-expressions).
+
 ### User interface
 
-- A form-based calculator. Operators are clickable buttons: +, −, ×, ÷ (shown as a fraction a/b), xʸ, √ and %. Operands are entered with an on-screen keypad (digits, `.`, ±, backspace) or with the physical keyboard (D1, D2).
-- After a result, pressing an operator reuses that result as the first operand (D1).
-- A history icon in the display opens the last 100 calculations, saved in the browser. Clicking an entry loads its operands, operator and result. The 101st entry drops the oldest (D3).
-- Chaining and history use the exact `value` of a result. Copying puts its `decimal` on the clipboard with all its digits (D21, D25).
+- The visual direction is "Equation": a white page, the calculation as an editable equation, and the result in its own mint card (D39).
+- The calculation is an expression in an editor with a cursor, a thin vertical bar (D40). The user places the cursor by clicking or tapping between characters, or moves it with the arrow keys, and inserts or deletes digits, operators and parentheses anywhere. On-screen buttons and the physical keyboard behave the same way.
+- Buttons: digits, `.`, ± and backspace; the operators +, −, ×, ÷ (drawn as a fraction a/b), xʸ, √ and %; and two parenthesis keys, `(` and `)` (D1, D2, D46). Each one inserts at the cursor. Fractions, square roots and exponents are drawn as structures whose parts can be edited (D40). Pressing √ or `(` right after a number, a `)` or a `%` first inserts a visible × (D46).
+- Every calculation is computed by `POST /api/v1/evaluate` (D41).
+- After a result, pressing an operator starts a new expression with that result as its first operand (D1).
+- A history icon opens the last 100 calculations, saved in the browser. The 101st entry drops the oldest (D3). "Load" restores an entry's expression and result, "Use" inserts its result at the cursor, and "Clear history" deletes every entry after a confirmation (D48).
+- Chaining, "Use" and the history use the exact `value` of a result. Copying puts its `decimal` on the clipboard with all its digits (D21, D25).
+- An error is shown next to the part of the expression at fault, with a message written for each error `code` (D47).
 - Results are shown truncated, never rounded, with at most 100 fractional digits (D11):
   - At first, `repeating` results show 4 decimals and an ellipsis. Every other result with more than 5 decimals shows 5 decimals and an ellipsis. Results with 5 or fewer decimals show in full.
   - Each click on the ellipsis expands the result to 20, 40, 60, 80 and then 100 fractional digits. Expansion stops early when the `decimal` has fewer digits, and the ellipsis disappears once every displayable digit is visible.
@@ -152,7 +158,7 @@ Every row was checked with exact rational arithmetic. Errors:
 
 ### Conventions
 
-- Every operation is `POST /api/v1/{operation}` (D14).
+- Every operation is `POST /api/v1/{operation}` (D14). Expressions use `POST /api/v1/evaluate` (D41), described in [Expressions](#5-expressions).
 - The request has `Content-Type: application/json` and a body of at most 64 KiB. Media type parameters are allowed, so `application/json; charset=utf-8` is accepted. The body is a JSON object whose fields are strings (D4). Unknown fields are rejected, and `null` counts as a missing field.
 - The body is decoded strictly (D35). Member names are case-sensitive, so `"A"` is an unknown field. A duplicate member, invalid UTF-8 or any data after the object is `invalid_json`.
 - A success is `200` with `Content-Type: application/json` and the body `{"value": "...", "decimal": "...", "kind": "..."}` (D21).
@@ -171,6 +177,7 @@ Every row was checked with exact rational arithmetic. Errors:
 | `POST /api/v1/power` | `{"base", "exponent"}` | base ^ exponent | `exponent_not_integer`, `exponent_out_of_range`, `division_by_zero` (0 raised to a negative exponent) |
 | `POST /api/v1/sqrt` | `{"value"}` | √value | `negative_square_root` |
 | `POST /api/v1/percentage` | `{"percent", "base"?, "operator"?}` | the rules in [Operations](#operations) | `missing_field` (`base` without `operator` or the reverse), `invalid_operator`, `division_by_zero` (`divide` with a percent of 0) |
+| `POST /api/v1/evaluate` | `{"expression"}` | the expression, see [Expressions](#5-expressions) | `invalid_expression`, `expression_too_complex`, and every error of the operations it contains |
 
 - In `percentage`, `operator` is one of `add`, `subtract`, `multiply` or `divide`.
 - Every endpoint can also return `invalid_json`, `missing_field`, `unknown_field`, `invalid_number`, `operand_out_of_range`, `result_too_large`, `result_too_precise` and, if the server has a bug, `internal_error`.
@@ -247,6 +254,7 @@ Every error is a Problem Details object (RFC 9457) with these members:
 | `detail` | A human-readable explanation of this occurrence |
 | `code` | A stable, machine-readable code (extension member) |
 | `field` | The request field at fault, when there is one (extension member) |
+| `position` | In `evaluate`, the index of the character at fault in the expression (extension member, see [Expression errors](#expression-errors)) |
 
 Request errors name the field they are about. Calculation errors use these fields:
 
@@ -289,6 +297,8 @@ The text after the status code in the status line is informational, and clients 
 | <a id="exponent_not_integer"></a>`exponent_not_integer` | 400 | Exponent not integer | The exponent is not an exact integer. |
 | <a id="exponent_out_of_range"></a>`exponent_out_of_range` | 400 | Exponent out of range | The exponent is below −1000 or above 1000. |
 | <a id="invalid_operator"></a>`invalid_operator` | 400 | Invalid operator | `operator` is not one of the JSON strings `add`, `subtract`, `multiply` or `divide`. |
+| <a id="invalid_expression"></a>`invalid_expression` | 400 | Invalid expression | `expression` is not a JSON string, or it does not follow the [expression syntax](#syntax): a character outside the syntax, a missing or unexpected token, or an unclosed group. |
+| <a id="expression_too_complex"></a>`expression_too_complex` | 400 | Expression too complex | The expression has more than 100 operations, more than 10 powers, or groups nested more than 100 levels deep. |
 | <a id="division_by_zero"></a>`division_by_zero` | 422 | Division by zero | The divisor is zero: `b` in `divide`, a percent of 0 with `divide`, or 0 raised to a negative exponent. |
 | <a id="negative_square_root"></a>`negative_square_root` | 422 | Negative square root | `sqrt` received a negative value. |
 | <a id="result_too_large"></a>`result_too_large` | 422 | Result too large | \|result\| ≥ 10⁴⁰. |
@@ -312,26 +322,185 @@ When a request has several problems, the API reports only the first one, checked
 9. Exponent rules.
 10. The calculation itself, including `internal_error`.
 
+`evaluate` follows steps 1 to 6, and then its own order, described in [Expression errors](#expression-errors).
+
+## 5. Expressions
+
+`POST /api/v1/evaluate` computes an expression with several operations (D41). The frontend sends every calculation through it.
+
+### Request and response
+
+- The body is `{"expression": "..."}`, with the [conventions](#conventions) of the other endpoints: `application/json`, at most 64 KiB, strict decoding and unknown fields rejected.
+- `expression` is required. A value that is not a JSON string is `invalid_expression` with `field: "expression"`.
+- A success is `200` with `{"value", "decimal", "kind"}`, the same shape as the other endpoints, so its `value` can be chained (D21).
+
+### Syntax
+
+An expression is ASCII text made of these tokens. Spaces (U+0020) may separate tokens, but not split one (D50).
+
+| Token | Form | Examples |
+|---|---|---|
+| Number | A decimal of the [operand syntax](#operand-syntax), without a sign | `12`, `0.5`, `1e-3`, `2.5E10` |
+| Value | `[`, any operand of the [operand syntax](#operand-syntax), `]` | `[1/7]`, `[-2.5]`, `[~1.4142135623730950488]` |
+| Operator | `+`, `-`, `*`, `/`, `^` or `%` | |
+| Square root | `sqrt(`, then an expression, then `)` | `sqrt(2)`, `sqrt(9/4)` |
+| Group | `(`, then an expression, then `)` | `(2+3)*4` |
+
+The grammar, from the lowest to the highest precedence (D42):
+
+```text
+sum      = term { ("+" | "-") term }
+term     = signed { ("*" | "/") signed }
+signed   = "-" signed | power
+power    = postfix [ "^" signed ]
+postfix  = primary [ "%" ]
+primary  = number | value | "(" sum ")" | "sqrt(" sum ")"
+```
+
+- `^` groups from right to left: `2^3^2` = 2^(3^2) = 512. Its exponent may be negated: `2^-2` = 0.25.
+- Unary minus binds below `^`: `-2^2` = −4, and `(-2)^2` = 4.
+- `*` and `/` bind tighter than `+` and `-`, and both levels group from left to right: `2+3*4` = 14, and `8/4/2` = 1.
+- `%` follows a number, a value, a group or a square root, once: `15%%` is `invalid_expression`.
+- There is no implicit multiplication: `2(3)` and `2sqrt(9)` are `invalid_expression` (D46).
+- A number starts with a digit or `.` and runs over digits, `.`, `e` and `E`, plus a `+` or `-` right after `e` or `E`. A run that does not match the decimal operand syntax is `invalid_number`, for example `1.2.3`, `.5` or `2e`.
+- A result goes back into an expression as a value in brackets, which keeps exact fractions and the `~` mark (D21, D22, D50). A fraction cannot travel as a division: as a number on its own, its denominator can exceed the operand limit of 10⁴⁰.
+
+### Meaning
+
+- Every operation applies the rules of [Numbers](#2-numbers) and [Exactness and precision](#3-exactness-and-precision) as if it were computed alone (D44). Every intermediate result must stay within the [limits](#limits). An approximate intermediate result enters the next operation as its `value`, so `sqrt(2)*sqrt(2)` returns `~2`, as when the two steps are chained.
+- `-x` is the negation of x. `sqrt(x)` is the square root. `x^y` follows the power rules: the exponent must be an exact integer between −1000 and 1000, and 0 raised to a negative exponent is a division by zero (D8, D18).
+- Percentages (D43):
+  - A term is what `+` and `-` separate: a number, a value, a group or a square root, or a product, quotient, power or negation of them.
+  - A term that is only a percentage, B% with or without minus signs in front, applies to the term T right before it when it follows `+` or `-`: T + B% = T + T × B ÷ 100, and T − B% = T − T × B ÷ 100. The pair then acts as one term and keeps the sign in front of T.
+  - So `50+200+15%` = 50 + 230 = 280, `50-200+15%` = 50 − 230 = −180, and `50-200-15%` = 50 − 170 = −120.
+  - Percentages in a row compound: `200+15%+10%` = 230 + 10% = 253.
+  - A group is a term, so parentheses give the percentage of a subtotal: `(50+200)+15%` = 287.5.
+  - Anywhere else, B% = B ÷ 100: `200*15%` = 30, `200/15%` = 4000/3, `15%+200` = 200.15, `200-15%*2` = 199.7, and `2^50%` is `exponent_not_integer`.
+  - Every case of D7 returns the same result as the `percentage` endpoint.
+- Evaluation runs from left to right. An operation runs as soon as its operands are known, and in each sum the percentages are applied to their terms before the terms are added and subtracted. Evaluation stops at the first operation that fails.
+
+### Size limits
+
+- An expression has at most 100 operations, and at most 10 of them are powers (D45). Every `+`, `-`, `*`, `/`, `^`, `%` and `sqrt` counts as one operation, unary minus included.
+- Groups and square roots nest at most 100 levels deep (D50).
+- Breaking either limit is `expression_too_complex`.
+
+### Expression errors
+
+Errors are Problem Details, as in [Errors](#errors). An error about the text of the expression or about one of its operations has a `position` member in place of `field`. `position` is a JSON number: the 0-based index of the character at fault. An expression is ASCII, so the index is the same in characters, bytes and UTF-16 code units.
+
+| Code | `position` points to |
+|---|---|
+| `invalid_expression` | The first character that cannot continue the expression: an unexpected token, a character outside the syntax, or the end of the expression (its length) when an operand is missing. An unclosed `(`, `sqrt(` or `[` points to its opening character. |
+| `invalid_number`, `operand_out_of_range` | The first character of the number, or the `[` of the value. |
+| `expression_too_complex` | The first operator beyond the limit, or the opening character that nests too deep. |
+| `exponent_not_integer`, `exponent_out_of_range` | The `^`. |
+| `division_by_zero` | The `/`, or the `^` when 0 is raised to a negative exponent. |
+| `negative_square_root` | The `s` of `sqrt(`. |
+| `result_too_large`, `result_too_precise` | The operator whose result breaks a limit: `+`, `-`, `*`, `/`, `^`, `%` or the `s` of `sqrt(`. For T + B% and T − B%, it is the `%`. |
+
+The status of each code is the one in [Errors](#errors). After steps 1 to 6 of the general check order, `evaluate` checks:
+
+7. `expression` is a JSON string (`invalid_expression` with `field`).
+8. The syntax, read from left to right. The first problem met is reported: `invalid_expression`, `invalid_number`, or `expression_too_complex` for nesting.
+9. The operand limits of numbers and values, from left to right (`operand_out_of_range`).
+10. The number of operations and powers (`expression_too_complex`).
+11. The evaluation, including `internal_error`.
+
+### Expression examples
+
+Every row was checked with exact rational arithmetic.
+
+| Expression | `value` | `kind` |
+|---|---|---|
+| `0.1+0.2` | `0.3` | `exact` |
+| `2+3*4` | `14` | `exact` |
+| `(2+3)*4` | `20` | `exact` |
+| `2^3^2` | `512` | `exact` |
+| `-2^2` | `-4` | `exact` |
+| `2^-2` | `0.25` | `exact` |
+| `1/3*3` | `1` | `exact` |
+| `[1/7]*7` | `1` | `exact` |
+| `sqrt(9/4)` | `1.5` | `exact` |
+| `sqrt(2)*sqrt(2)` | `~2` | `approximate` |
+| `200+15%` | `230` | `exact` |
+| `200-15%` | `170` | `exact` |
+| `200*15%` | `30` | `exact` |
+| `200/15%` | `4000/3` | `repeating` |
+| `15%` | `0.15` | `exact` |
+| `50+200+15%` | `280` | `exact` |
+| `50-200+15%` | `-180` | `exact` |
+| `200+15%+10%` | `253` | `exact` |
+| `(50+200)+15%` | `287.5` | `exact` |
+| `15%+200` | `200.15` | `exact` |
+| `200+-15%` | `170` | `exact` |
+
+| Expression | Error | `position` |
+|---|---|---|
+| `1/0` | `division_by_zero` | 1 |
+| `0^-1` | `division_by_zero` | 1 |
+| `sqrt(-4)` | `negative_square_root` | 0 |
+| `2^0.5` | `exponent_not_integer` | 1 |
+| `2^1001` | `exponent_out_of_range` | 1 |
+| `10^50/10^20` | `result_too_large` | 2 |
+| `2+` | `invalid_expression` | 2 |
+| `(2+3` | `invalid_expression` | 0 |
+| `2(3)` | `invalid_expression` | 1 |
+| `15%%` | `invalid_expression` | 3 |
+| `1.2.3` | `invalid_number` | 0 |
+
+Request example:
+
+```http
+POST /api/v1/evaluate
+Content-Type: application/json
+
+{"expression": "50+200+15%"}
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"value": "280", "decimal": "280", "kind": "exact"}
+```
+
+Error example:
+
+```http
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json
+
+{
+  "type": "https://github.com/msckell/precizzle/blob/main/docs/SPEC.md#division_by_zero",
+  "title": "Division by zero",
+  "status": 422,
+  "detail": "The expression divides by zero at position 1.",
+  "code": "division_by_zero",
+  "position": 1
+}
+```
+
 ## Decisions log
 
 ### Block 0: Foundation
 
 | # | Decision | Reason |
 |---|---|---|
-| D1 | Form-based calculator with chaining. Operators (+, −, ×, ÷, xʸ, √, %) are clickable buttons. Operands are entered through an on-screen keypad (digits, `.`, ±, backspace) or the physical keyboard. After a result, pressing an operator reuses that result as the first operand. | Reusing results and entering calculations comfortably is the top UI priority, and users must not need to know keyboard shortcuts. One API call per step keeps the backend the source of truth. Some mobile number keyboards lack a minus key, which the ± button covers. |
+| D1 | **Partly superseded by D40 and D41.** Form-based calculator with chaining. Operators (+, −, ×, ÷, xʸ, √, %) are clickable buttons. Operands are entered through an on-screen keypad (digits, `.`, ±, backspace) or the physical keyboard. After a result, pressing an operator reuses that result as the first operand. | Reusing results and entering calculations comfortably is the top UI priority, and users must not need to know keyboard shortcuts. One API call per step keeps the backend the source of truth. Some mobile number keyboards lack a minus key, which the ± button covers. |
 | D2 | Division is presented in the UI as a fraction (a/b). | The owner asked for a clickable fraction element. It needs no API change. |
-| D3 | A history icon in the display opens the last 100 calculations, saved in the browser (localStorage). Clicking an entry loads its operands, operator and result. The 101st entry drops the oldest. Frontend only. | The owner wants to go back to earlier calculations and results, and the history must survive a reload. |
+| D3 | **Extended by D48.** A history icon in the display opens the last 100 calculations, saved in the browser (localStorage). Clicking an entry loads its operands, operator and result. The 101st entry drops the oldest. Frontend only. | The owner wants to go back to earlier calculations and results, and the history must survive a reload. |
 | D4 | Numbers travel as JSON strings in requests and responses. JSON numbers are rejected as invalid input. | An experiment showed that JavaScript `JSON.parse` turns `12345678901234567890.123` into `12345678901234567000`, and Go's default decoder turns it into a `float64`. Strings are exact in both languages without special parsing. |
 | D5 | Errors use RFC 9457 Problem Details (`application/problem+json`) with a machine-readable `code` extension member. | It is a standard, self-describing format, and `code` gives clients a stable value to branch on. |
 | D6 | The API contract is written in Markdown in this file. | One source of truth, readable on GitHub and by CodeRabbit, with no extra tooling. Nothing in scope consumes an OpenAPI file. |
-| D7 | Percentage divides its number by 100 and follows the preceding operator: A + B% = A + A·B/100, A − B% = A − A·B/100, A × B% = A·B/100, A ÷ B% = A ÷ (B/100), and B% alone = B/100. | These are the pocket calculator semantics the owner described: 200 + 15% = 230, 200 − 15% = 170, 200 × 15% = 30, 200 ÷ 15% = 1333.33…, 15% = 0.15. |
+| D7 | **Extended by D43.** Percentage divides its number by 100 and follows the preceding operator: A + B% = A + A·B/100, A − B% = A − A·B/100, A × B% = A·B/100, A ÷ B% = A ÷ (B/100), and B% alone = B/100. | These are the pocket calculator semantics the owner described: 200 + 15% = 230, 200 − 15% = 170, 200 × 15% = 30, 200 ÷ 15% = 1333.33…, 15% = 0.15. |
 | D8 | Exponentiation accepts integer exponents, negative ones included. | Positive exponents stay exact, and integer exponents never produce complex-number cases. |
 | D9 | **Superseded by D21 and D24.** Exact results are returned exactly, with up to 1000 fractional digits. Results that need approximation (repeating decimals, irrational roots) are rounded to 20 decimal places with round half even. An exact result that exceeds the supported limits is an error and is never silently rounded. | This keeps calculation precision separate from display precision. Half even avoids the upward bias of half up across many operations. |
 | D10 | **Superseded by D23.** Every successful response states the kind of result: `exact`, `repeating` or `irrational`. | The display rule (D11) depends on it, and the backend can prove it. A reduced fraction repeats unless its denominator has no prime factors other than 2 and 5, and the square root of a rational number is irrational unless the numerator and the denominator are perfect squares. |
 | D11 | **The stored value and the copy rule are superseded by D21 and D25.** Stored precision and display precision are separate. The stored value is the complete result the API returned (D9): up to 1000 fractional digits for exact results and 20 for approximated ones. The display is frontend only and shows at most 100 fractional digits, truncated and never rounded. At first it shows 4 decimals and an ellipsis for `repeating` results, and 5 decimals and an ellipsis for every other result with more than 5 decimals. Results with 5 or fewer decimals show in full with no ellipsis. Each click on the ellipsis expands the result to 20, 40, 60, 80 and then 100 fractional digits. Expansion stops early when the result has fewer digits, and stops at 100 even if more are stored. The ellipsis disappears once every displayable digit is visible. Expanding never recalculates or changes the stored value. Copying and chaining always use the complete stored value, whatever is visible. Long numbers never break the layout. | The owner prioritizes both comfortable reading and mathematical precision: the display stays short and readable, and no stored digit is ever lost. |
 | D12 | **The limits are superseded by D24, and D22 adds formats.** Operands are plain decimals with an optional leading `-` and an optional `.`, and scientific notation (`1e-3`, `2.5E10`) is also accepted. A leading `+`, thousands separators and `,` as the decimal separator are rejected. Operands and results share the same limits, 40 integer digits and 1000 fractional digits, measured after expanding scientific notation. | One unambiguous syntax plus scientific notation for API users. Shared limits guarantee that every result is a valid operand, so chaining always works. |
 | D13 | **Extended by D22.** Results are canonical: no trailing zeros, no leading zeros, no `-0` and no scientific notation (`1.10 + 1.20` returns `2.3`). | Each value has one representation, which keeps the API and the tests simple. The UI can still format results. |
-| D14 | One endpoint per operation: `POST /api/v1/{operation}` with a JSON body. Percentage takes the percent plus an optional base and preceding operator. | Versioned paths and JSON bodies of strings follow from D4. Percentage needs the operator for D7, and keeping it in one call puts every percent rule in Go, where it is tested. |
+| D14 | **Extended by D41.** One endpoint per operation: `POST /api/v1/{operation}` with a JSON body. Percentage takes the percent plus an optional base and preceding operator. | Versioned paths and JSON bodies of strings follow from D4. Percentage needs the operator for D7, and keeping it in one call puts every percent rule in Go, where it is tested. |
 | D15 | Repository layout: the Go module in `backend/`, the Vite app in `frontend/`, and documentation at the root. | Each layer is self-contained, and the layout matches the path instructions in `.coderabbit.yaml`. |
 | D16 | **The response shape is superseded by D21.** Request bodies: `{"a","b"}` for add, subtract, multiply and divide; `{"base","exponent"}` for power; `{"value"}` for square root; `{"percent"}` for percentage, with optional `"base"` and `"operator"` (`add`, `subtract`, `multiply` or `divide`), which must be given together. A successful response is `200 {"result": "...", "kind": "..."}`. | Field names state each operand's role, and the success shape is the same for every operation. |
 | D17 | **D24 restates the limits behind `result_too_large` and `result_too_precise`.** HTTP status codes: `400` when the request itself is wrong (malformed JSON, missing field, invalid or out-of-range number, non-integer or out-of-range exponent, invalid operator); `422` when the request is well formed but the result does not exist or cannot be represented (division by zero, square root of a negative number, `result_too_large` for more than 40 integer digits, `result_too_precise` for more than 1000 fractional digits); `404`, `405`, `413` for an oversized body, and `415` for a body that is not JSON. | Clients can tell a request they must fix from a calculation that has no representable answer. |
@@ -362,11 +531,41 @@ When a request has several problems, the API reports only the first one, checked
 | D37 | If package `calc` returns an error that the API does not map, the API logs the error and answers `500 internal_error` in Problem Details, with a generic detail and no `field`. | The owner wants an internal failure reported as one: never a crash, and never a math code that hides the bug. The cause stays in the server log, so the response reveals no implementation details. |
 | D38 | Paths that are not in clean form keep the standard `ServeMux` behavior: `307 Temporary Redirect` to the clean path. | The owner chose not to change the standard router behavior. A `307` keeps the method and the body, so following it reaches the right endpoint. CodeRabbit noted in PR #2 that the SPEC did not document it. |
 
+### Block 2: Expressions and frontend
+
+| # | Decision | Reason |
+|---|---|---|
+| D39 | Visual direction "Equation". The calculation is an editable equation of tappable boxes, the result sits in its own mint card, and division is drawn as a stacked fraction. The background is white. Dark purple (`#392757`) is used for text and selected elements. Accents come from the reference palette: mint (`#3ED9AB`) and green (`#12C488`) for results and the equals key, purple (`#A346D0`) for the active box and focus, coral (`#EE6072`) for errors, and orange (`#FF7925`) for approximate results. The typeface is Nunito with tabular figures. | The owner chose it from three mockups (Pocket, Equation, Ledger). Every part of a calculation has its own place and color, chaining is visible, and D2's fraction is drawn literally. Mint, green and orange reach only 1.8 to 2.6:1 contrast as text on white, below the WCAG minimum of 4.5:1, so they are used as fills under dark text or in darker shades for text. |
+| D40 | Input is an expression editor with a real cursor: a thin vertical bar that the user places by clicking or tapping between characters, or moves with the arrow keys. Digits and operators are inserted at the cursor without replacing anything, and any part can be deleted. Fractions, square roots and exponents are drawn as structures with editable parts. On-screen buttons and the physical keyboard behave the same way. | The owner wants to insert, change or delete any part of a calculation without starting over. The original prompt is in `PROMPTS.md`. |
+| D41 | A new endpoint, `POST /api/v1/evaluate`, evaluates expressions with several operators. Its body is `{"expression": "..."}`: an ASCII string with numbers, values in brackets (D50), the operators `+ - * / ^ %`, `sqrt(...)` and parentheses. A success has the usual shape. An error is Problem Details with a `position` member in place of `field`. The seven operation endpoints stay unchanged, and the frontend uses only `evaluate`. This removes "Expressions with several operators and operator precedence in one request" from the out of scope list, and replaces "one API call per step" in D1. | The owner chose free expressions after weighing three alternatives. Precedence is mathematical logic, so it stays in the backend. A frontend that applied precedence and chained requests would move math rules into the browser. A text string reads well in `curl` and README examples, and it follows D4. |
+| D42 | Precedence follows the mathematical convention. Parentheses and structures come first. Then `^`, from right to left (`2^3^2` = 2⁹ = 512). Then unary minus (`-2^2` = −4). Then `*` and `/`, from left to right. Then `+` and `-`, from left to right. | It matches the notation the editor draws, where an exponent sits on its base. Spreadsheet conventions (−2² = 4, `^` from left to right) contradict that notation. |
+| D43 | `%` extends D7 by applying to the operand it belongs to. A term that is only a percentage, B% with or without minus signs in front, applies to the term T right before it when it follows `+` or `-`: T + B% = T + T × B ÷ 100, and T − B% = T − T × B ÷ 100. The pair acts as one term and keeps the sign in front of T: `50 + 200 + 15%` = 50 + 230 = 280, and `50 - 200 + 15%` = 50 − 230 = −180. Percentages in a row compound: `200 + 15% + 10%` = 253. A group is a term, so `(50 + 200) + 15%` = 287.5. Anywhere else, B% = B ÷ 100: `200 * 15%` = 30, `200 / 15%` = 4000/3 and `15% + 200` = 200.15. | The owner wants a percentage to apply to the operand it follows, not to the subtotal, and corrected the first proposal, which gave 287.5 for `50 + 200 + 15%`. The sign in front of T covers T with its percentage, so a markup makes an expense larger and a discount makes it smaller: `50 - 200 - 15%` = −120. Successive percentages compound, like successive markups. Every case of D7 returns the same result as the `percentage` endpoint. |
+| D44 | Every operation inside an expression applies the rules and limits of [Numbers](#2-numbers) and [Exactness and precision](#3-exactness-and-precision), as if it were computed alone. Each intermediate result must be a valid operand, an approximate intermediate result goes into the next operation as its `value`, and an error points to the operation that failed. `10^50 / 10^20` is `result_too_large`, and `sqrt(2) * sqrt(2)` returns `~2`. | The owner does not want expressions to change the math rules already defined. An expression returns exactly what the same steps return when they are chained. |
+| D45 | An expression has at most 100 operations, and at most 10 of them are powers. A longer expression is `400 expression_too_complex`. | On the largest operands, a power takes about 85 ms on the development machine and every other operation takes at most 0.25 ms. The worst case stays near 1 s, far below the 10 s write timeout, and a user can still add a list of 100 amounts. |
+| D46 | Two keys enter parentheses, `(` and `)`. Each one inserts exactly its parenthesis at the cursor, and the user can move, insert and delete parentheses like any other character. An unbalanced expression is reported when it is evaluated. Pressing √ or `(` right after a number, a `)` or a `%` first inserts a visible ×, so 2 followed by `(` gives 2 × (. The API accepts only explicit operators. The Equation layout places both keys so that it stays balanced on desktop and on mobile. | The owner prefers two explicit keys to one smart key, and kept the visible × before `(`. Fractions, roots and exponents already group their parts, and parentheses cover cases such as (2 + 3) × 4. The visible × keeps what the user sees equal to what is computed, with no implicit multiplication rule. |
+| D47 | An error is shown next to the part of the expression at fault, with a message that the frontend writes for each `code`: what happened and how to fix it. The keypad and the keyboard produce only well-formed numbers, and the backend checks the limits. The expression is kept so the user can fix it. | Frontend messages can use the words the user sees, and `position` marks the exact spot. The limits stay written in one place, the backend. |
+| D48 | Each history entry offers two actions. "Load" restores its expression and result, as in D3. "Use" inserts its exact `value` at the cursor as a result chip. A "Clear history" action deletes every entry after a confirmation inside the history view. This extends D3. | The owner prioritizes reusing results anywhere in a calculation. The history can hold sensitive amounts on a shared device, so the user can clear it. |
+| D49 | Frontend tests use Vitest, React Testing Library and jsdom. Mock Service Worker (MSW) intercepts the API requests at the network level. CI fails when statement coverage of `frontend/src` drops below 90%, not counting the entry point `main.tsx`. | MSW lets tests check the requests the app really sends (URL, method, headers and body), as the CodeRabbit path instructions ask. The threshold matches `internal/api` (D34). |
+| D50 | Expression syntax details. Spaces may separate tokens. A result goes back into an expression as a value in brackets, such as `[1/7]` or `[~1.4142135623730950488]`, read with the operand syntax of [Numbers](#2-numbers). A number in an expression has no sign, so a leading `-` is unary minus, and `sqrt(` is one token. Groups and square roots nest at most 100 levels deep. An error about the expression carries `position`, the 0-based index of the character at fault, and there are two new codes: `invalid_expression` and `expression_too_complex`, both `400`. Every `+`, `-`, `*`, `/`, `^`, `%` and `sqrt` counts as one operation for D45. | A fraction cannot travel as a division: as a number on its own, its denominator can exceed the operand limit of 10⁴⁰. The brackets keep exact fractions and the `~` mark (D21, D22). `position` lets the frontend mark the exact spot (D47). The nesting limit bounds the parser's recursion, as the body limit bounds its input. |
+
+### Block 2a: Expression API
+
+Decisions taken while building the expression API, numbered from D51.
+
+| # | Decision | Reason |
+|---|---|---|
+
+### Block 2b: Frontend
+
+Decisions taken while building the frontend, numbered from D71.
+
+| # | Decision | Reason |
+|---|---|---|
+
 ## Out of scope
 
 - User accounts and authentication.
 - Server-side storage of the history (the history lives in the browser, D3).
-- Expressions with several operators and operator precedence in one request.
 - Fractional exponents, roots other than the square root, and complex numbers.
 - Scientific functions such as trigonometry and logarithms.
 - Memory keys (M+, M−, MR).
