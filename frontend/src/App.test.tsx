@@ -360,7 +360,7 @@ describe("history", () => {
     await user.click(screen.getByRole("button", { name: "Clear history" }));
     expect(
       screen.getByRole("group", { name: "Confirm clearing the history" }),
-    ).toHaveTextContent("Delete all 1 calculation?");
+    ).toHaveTextContent("Delete 1 calculation?");
     expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(entries()).toHaveLength(1);

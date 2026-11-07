@@ -118,7 +118,8 @@ export function HistoryPanel({
           aria-label="Confirm clearing the history"
         >
           <p>
-            Delete all {plural(entries.length)}?
+            Delete {entries.length === 1 ? "" : "all "}
+            {plural(entries.length)}?
             <span>
               They are removed from this device and can&apos;t be recovered.
             </span>
