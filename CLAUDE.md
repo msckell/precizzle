@@ -21,6 +21,18 @@ Read these at the start of every session, before doing anything else:
 - Never force push, rewrite published history or skip checks (`--no-verify`).
 - No AI attribution in commits or PRs (no `Co-Authored-By` for assistants, no "Generated with").
 
+## Block 2: parallel work
+
+Two sessions work at once, each in its own worktree, both started from the shared base `docs/block-2-contract` (D39 to D50, `evaluate` contract in SPEC §5):
+
+- 2a, expression API: `C:\Projects\precizzle-expression-api`, branch `feat/expression-api`. Touches only `backend/`.
+- 2b, frontend: `C:\Projects\precizzle-frontend`, branch `feat/frontend`. Touches only `frontend/`. Until 2a is merged, it mocks `evaluate` with MSW, exactly as SPEC §5 describes.
+- `docs/SPEC.md`: §2 to §5 and D39 to D50 are frozen. To change them, stop and ask the owner; then 2a commits the change. 2b edits only "User interface" in §1. New decisions go to the "Block 2a" table (from D51) or the "Block 2b" table (from D71).
+- `PROMPTS.md`: 2a writes only in §4.4, 2b only in §4.5. `CLAUDE.md`: 2a edits only the backend commands, 2b only the frontend commands; this section changes only with the owner's OK.
+- `README.md`: 2a edits only "Backend API"; 2b adds a "Frontend" section right before it. `ci.yml`: 2a edits only the `backend` job; 2b adds a `frontend` job after it.
+- Plans: `docs/plans/block-2a-expression-api.md` and `docs/plans/block-2b-frontend.md`.
+- Merge order: the shared base, then 2a, then 2b. Before its PR, 2b merges `main` (never rebases) and checks the UI against the real API.
+
 ## Language
 
 Chat with the owner in Spanish. Everything in the repository or on GitHub is in English: code, comments, commits, branches, PRs, review replies, docs.

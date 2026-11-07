@@ -626,3 +626,355 @@ English translation:
 > Then, present the updated state of CI and CodeRabbit before continuing with closing the Pull Request.
 
 **Status:** The exact full-power case takes about 76 ms, the same order as the approximate one accepted in 3.3. After the replies on both threads, CodeRabbit approved the pull request.
+
+---
+
+## 4. Block 2: Expressions and frontend
+
+During the interview, Block 2 was split into two parts, each with its own plan, branch and pull request: 2a, the expression API (`feat/expression-api`), merged first, and 2b, the frontend (`feat/frontend`). Blocks 3 and 4 keep their numbers.
+
+### 4.1 Starting prompt
+
+Written in English. An image of a logo came with it, as the color reference.
+
+> I want to start Block 2 of Precizzle, focused on the frontend.
+>
+> First, recover the full project context by reading CLAUDE.md, the master prompt, docs/SPEC.md, the previous block plans, and the Git history. Verify that main is up to date, the working tree is clean, and the backend has been fully integrated.
+>
+> Then, prepare the feat/frontend branch following our established workflow.
+>
+> Before starting the interview and exploring design alternatives, I want to establish some visual preferences.
+>
+> 1. Visual identity and color palette
+>
+> I’m attaching a reference image containing the color palette I’d like to use.
+>
+> I want the application’s main background to be white, with a clean, modern, visually appealing interface that feels intuitive and comfortable to use.
+>
+> I’d like to incorporate subtle accents inspired by the logo’s colors, particularly mint green, turquoise, orange, coral, and purple.
+>
+> Dark purple can also be used as a secondary color, especially for typography, contrast, or selected interface elements.
+>
+> I don’t want every element to have a different color or the interface to feel visually overwhelming. I prefer a predominantly white design with carefully balanced accents across buttons, active states, indicators, and small visual details.
+>
+> Use the attached image as a color reference, without necessarily reproducing the logo itself.
+>
+> 2. User experience
+>
+> I want usability to be one of the main priorities.
+>
+> Numbers, operators, and results should be easy to identify and distinguish. Buttons should be clear, accessible, and comfortable to interact with using both a mouse and a touchscreen.
+>
+> Pay particular attention to calculation chaining, result reuse, calculation history, and progressive decimal expansion.
+>
+> The overall experience should feel natural and efficient, without unnecessary decorative elements interfering with readability or functionality.
+>
+> 3. Visual design proposals
+>
+> Before implementing any components, present two or three distinct visual directions that respect these requirements.
+>
+> The proposals may differ in their layout, button arrangement, typography, proportions, spacing, and use of accent colors.
+>
+> I want each proposal to have its own visual identity while maintaining the white background and the reference color palette.
+>
+> Briefly explain the advantages and disadvantages of each direction, particularly regarding readability, usability, and responsiveness on mobile devices.
+>
+> Whenever possible, include visual mockups so I can compare the alternatives before making a decision.
+>
+> Do not commit to a final design before I approve one.
+>
+> 4. Development and architecture
+>
+> Keep all mathematical logic exclusively in the backend and respect the existing API contract and decisions documented in docs/SPEC.md.
+>
+> Start with the block interview, focusing on decisions that genuinely require my input.
+>
+> Once the interview is complete and I’ve approved the visual direction, move into Plan Mode to prepare the implementation plan.
+>
+> Respect our established checkpoints and development workflow. Do not begin implementing the frontend until I’ve approved the plan.
+
+### 4.2 Interview
+
+Before the questions, the assistant measured the colors of the reference image and their WCAG contrast on white. It then showed three static HTML mockups of the same scenario (1 ÷ 7 expanded to 20 decimals, chaining × 7, the history and a division by zero): A · Pocket, B · Equation and C · Ledger. The mockups were not added to the repository.
+
+#### Round 1: visual direction, √ and %, errors, history
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| Which visual direction? | B · Equation | D39 |
+| How do √ and % behave in a calculation in progress? | Typed answer, below | D40, D41 |
+| How is input validated, and how are backend errors shown? | Own message next to the field | D47 |
+| Can an old result be inserted into the current calculation? | Load or insert | D48 |
+
+**Editing with a cursor.** Typed in Spanish as the answer about √ and %. It arrived without line breaks and is reproduced exactly as received. Original (Spanish):
+
+> Quiero definir un comportamiento diferente para la introducción y edición de operaciones matemáticas.Mi prioridad es que el usuario pueda editar libremente las operaciones mediante un cursor de posición, similar al que existe en cualquier editor de texto.Quiero que dentro de la calculadora haya una pequeña barra vertical que indique exactamente dónde está posicionado el usuario.Las reglas que quiero son las siguientes:1. El usuario debe poder hacer clic entre los dígitos de un número o entre los distintos elementos de una operación para posicionar el cursor.2. Cuando seleccione un operador matemático, este debe insertarse exactamente en la posición del cursor, sin reemplazar automáticamente los números existentes.3. El cursor debe poder desplazarse hacia la izquierda o hacia la derecha utilizando el teclado físico o haciendo clic directamente sobre la posición deseada.4. Los operadores visuales de la calculadora deben respetar la posición del cursor. Esto incluye suma, resta, multiplicación, división, potenciación, raíz cuadrada y porcentaje.5. Cuando un operador requiera una estructura especial, como una fracción o una raíz cuadrada, quiero que se represente visualmente de manera clara y que el usuario pueda identificar y editar sus componentes.6. La edición debe resultar intuitiva. Quiero poder insertar, modificar o eliminar partes de una operación sin tener que borrar todo y comenzar nuevamente.7. Los botones de la calculadora y el teclado físico deben comportarse de manera consistente.8. La representación visual debe seguir la dirección Equation (opción B), que finalmente elegí para el frontend.Quiero que el cursor sea una herramienta de edición real y no simplemente un indicador del número que está seleccionado.Antes de implementar este comportamiento, revisá cómo se integra con nuestro modelo de operaciones encadenadas y con el contrato actual de la API. No quiero que la incorporación del cursor modifique accidentalmente las reglas matemáticas que ya definimos.Si permitir operadores en posiciones arbitrarias requiere incorporar expresiones con múltiples operaciones o modificar el comportamiento de la calculadora, explicame las alternativas y sus consecuencias antes de avanzar.
+
+English translation:
+
+> I want to define a different behavior for entering and editing mathematical operations. My priority is that the user can freely edit operations with a position cursor, like the one in any text editor. I want a small vertical bar inside the calculator that shows exactly where the user is positioned. These are the rules I want: 1. The user must be able to click between the digits of a number, or between the different elements of an operation, to place the cursor. 2. When the user selects a mathematical operator, it must be inserted exactly at the cursor position, without automatically replacing the existing numbers. 3. The cursor must move left or right with the physical keyboard, or by clicking directly on the desired position. 4. The calculator's visual operators must respect the cursor position. This includes addition, subtraction, multiplication, division, exponentiation, square root and percentage. 5. When an operator needs a special structure, such as a fraction or a square root, I want it to be shown clearly, and the user must be able to identify and edit its parts. 6. Editing must feel intuitive. I want to insert, change or delete parts of an operation without erasing everything and starting over. 7. The calculator's buttons and the physical keyboard must behave consistently. 8. The visual representation must follow the Equation direction (option B), which I finally chose for the frontend. I want the cursor to be a real editing tool, not just an indicator of the selected number. Before implementing this behavior, review how it fits our chained-operations model and the current API contract. I don't want the cursor to accidentally change the mathematical rules we already defined. If allowing operators in arbitrary positions requires expressions with several operations or changing the calculator's behavior, explain the alternatives and their consequences to me before moving forward.
+
+**Status:** The assistant explained how a cursor fits the API. Placing it, typing and deleting are editing, but inserting a second operator creates an expression with several operators, which was out of scope. Round 2 offered three alternatives. Final: D40, D41.
+
+#### Round 2: editing model, test mocks, coverage, clearing the history
+
+The three alternatives were one operation per calculation; one operation plus square roots inside its numbers, evaluated with one request per operation from the inside out; and free expressions with precedence, which change the API and the backend. A fourth, where the frontend applies precedence and chains requests, was discarded because it would move math rules into the frontend.
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| Which editing model with a cursor? | Free expressions | D41 |
+| How is the API mocked in frontend tests? | MSW | D49 |
+| Which coverage does CI require for the frontend? | 90% of statements | D49 |
+| Can the history be cleared? | "Clear history" with confirmation | D48 |
+
+#### Round 3: block structure, precedence, percentage, intermediate limits
+
+Before the questions, the assistant checked the server's 10 s write timeout and measured the slowest power, about 85 ms.
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| How is the work organized? | 2a API, 2b frontend | Two parts, see the start of this section |
+| Which precedence do the operations follow? | Mathematical convention | D42 |
+| What does % mean in a long expression? | Extend D7 | D43 |
+| Which limits apply to intermediate results? | Same limits at every step | D44 |
+
+**Status:** In 4.3 the owner replaced "Extend D7" with a percentage that applies to its own operand. Final: D43.
+
+#### Round 4: endpoint, parentheses, size limit, implicit multiplication
+
+Before the questions, a throwaway benchmark measured every other operation on the largest operands: at most 0.25 ms each.
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| How does an expression travel in the API? | Text: `{"expression": "…"}` | D41 |
+| How are parentheses entered? | One smart "( )" key | D46 |
+| How many operations can an expression have? | 100 operations, up to 10 powers | D45 |
+| What happens when √ or "(" follows a number? | The editor inserts a visible × | D46 |
+
+**Status:** In 4.3 the owner replaced the smart key with two keys, `(` and `)`, and kept the visible ×. Final: D46.
+
+### 4.3 Shared decisions and parallel work
+
+After the interview summary, the owner corrected two decisions and asked to build the expression API and the frontend in parallel, in two Claude Code sessions with separate Git worktrees. Original (Spanish), pasted as Markdown:
+
+> Quiero cerrar las decisiones compartidas del Bloque 2 y organizar el desarrollo paralelo del backend de expresiones y el frontend mediante dos agentes independientes de Claude Code.
+>
+> ### 1. Corrección de las reglas de porcentajes
+>
+> Quiero modificar D43 para que los porcentajes se apliquen al operando correspondiente, respetando la estructura y precedencia de la expresión.
+>
+> Por ejemplo:
+>
+> - `200 + 15% = 230`
+> - `200 − 15% = 170`
+> - `200 × 15% = 30`
+> - `50 + 200 + 15% = 280`
+>
+> En el último ejemplo, el 15% debe aplicarse a 200, no al subtotal de 250.
+>
+> Quiero que esta regla sea consistente con las operaciones porcentuales que ya definimos. Revisá los casos que puedan resultar ambiguos y, si afectan el comportamiento matemático, consultame antes de cerrar la especificación.
+>
+> ### 2. Corrección de los botones de paréntesis
+>
+> Quiero modificar D46.
+>
+> En lugar de una tecla inteligente `()`, prefiero **dos botones independientes: `(` y `)`**.
+>
+> Cada botón debe insertar exactamente el paréntesis correspondiente en la posición actual del cursor.
+>
+> El usuario debe poder mover el cursor, insertar, modificar y eliminar paréntesis libremente dentro de una expresión.
+>
+> Esta decisión debe reflejarse en el diseño Equation (B), manteniendo una distribución equilibrada, intuitiva y cómoda tanto en escritorio como en dispositivos móviles.
+>
+> ### 3. Preparación del desarrollo paralelo
+>
+> Quiero que trabajemos con dos agentes independientes:
+>
+> - **Agente Backend:** rama `feat/expression-api`, responsable de implementar la interpretación de expresiones matemáticas, precedencia, validaciones, porcentajes, endpoint `/api/v1/evaluate` y pruebas.
+> - **Agente Frontend:** rama `feat/frontend`, responsable de construir la interfaz Equation, el editor con cursor, los operadores visuales, los dos botones de paréntesis, el historial, la expansión de resultados y las pruebas correspondientes.
+>
+> Quiero utilizar **Git Worktrees**, de modo que cada agente tenga su propio directorio de trabajo y su propia rama, sin interferir con el otro.
+>
+> Antes de preparar los worktrees:
+>
+> 1. Actualizá `docs/SPEC.md` con las decisiones corregidas.
+> 2. Revisá y dejá definido el contrato compartido de `/api/v1/evaluate`, incluyendo los formatos de entrada, salida y errores.
+> 3. Verificá que ambas partes puedan desarrollarse independientemente sin depender de cambios de contrato todavía pendientes.
+> 4. Prepará una base compartida y versionada que ambos agentes puedan utilizar. Respetá las reglas existentes de commits, pull requests y aprobaciones; no publiques ni fusiones cambios sin mi autorización.
+> 5. Definí responsabilidades claras para los archivos compartidos, especialmente `SPEC.md`, `CLAUDE.md`, `PROMPTS.md` y GitHub Actions, evitando modificaciones simultáneas que generen conflictos.
+>
+> El frontend podrá utilizar respuestas simuladas basadas en el contrato aprobado hasta que la nueva API esté disponible.
+>
+> ### 4. Organización de las sesiones
+>
+> Quiero continuar utilizando esta sesión para el backend de expresiones y abrir una segunda sesión de Claude Code dedicada exclusivamente al frontend.
+>
+> Prepará los worktrees y las instrucciones necesarias para que pueda abrir esa segunda sesión con el contexto correcto.
+>
+> Una vez preparada la estructura, indicame exactamente qué directorio debo abrir y qué prompt inicial debo enviarle al segundo agente.
+>
+> Ambos agentes deben respetar las decisiones de `SPEC.md`, mantener sus cambios aislados y seguir el flujo de planificación, checkpoints, pruebas y revisión que establecimos.
+>
+> ### 5. Siguiente paso
+>
+> Primero resolvamos y documentemos las decisiones compartidas. Después organicemos los worktrees y las responsabilidades de cada agente.
+>
+> No comiences a implementar ninguno de los dos componentes hasta que sus respectivos planes estén aprobados.
+>
+> Quiero que me presentes la preparación realizada, los comandos ejecutados, el estado de Git, los archivos modificados y los pasos exactos para iniciar ambas sesiones.
+>
+> El objetivo es desarrollar backend y frontend en paralelo de forma ordenada, manteniendo una única especificación coherente y evitando conflictos entre agentes.
+
+English translation:
+
+> I want to close the shared decisions of Block 2 and organize the parallel development of the expression backend and the frontend with two independent Claude Code agents.
+>
+> ### 1. Correcting the percentage rules
+>
+> I want to change D43 so that percentages apply to the corresponding operand, respecting the structure and precedence of the expression.
+>
+> For example:
+>
+> - `200 + 15% = 230`
+> - `200 − 15% = 170`
+> - `200 × 15% = 30`
+> - `50 + 200 + 15% = 280`
+>
+> In the last example, the 15% must apply to 200, not to the subtotal of 250.
+>
+> I want this rule to be consistent with the percentage operations we already defined. Review the cases that may be ambiguous and, if they affect the mathematical behavior, ask me before closing the specification.
+>
+> ### 2. Correcting the parenthesis buttons
+>
+> I want to change D46.
+>
+> Instead of a smart `()` key, I prefer **two independent buttons: `(` and `)`**.
+>
+> Each button must insert exactly the corresponding parenthesis at the current cursor position.
+>
+> The user must be able to move the cursor and insert, change and delete parentheses freely inside an expression.
+>
+> This decision must be reflected in the Equation design (B), keeping a balanced, intuitive and comfortable layout on both desktop and mobile devices.
+>
+> ### 3. Preparing the parallel development
+>
+> I want us to work with two independent agents:
+>
+> - **Backend agent:** branch `feat/expression-api`, responsible for implementing the interpretation of mathematical expressions, precedence, validations, percentages, the `/api/v1/evaluate` endpoint and the tests.
+> - **Frontend agent:** branch `feat/frontend`, responsible for building the Equation interface, the editor with a cursor, the visual operators, the two parenthesis buttons, the history, the expansion of results and the corresponding tests.
+>
+> I want to use **Git Worktrees**, so that each agent has its own working directory and its own branch, without interfering with the other.
+>
+> Before preparing the worktrees:
+>
+> 1. Update `docs/SPEC.md` with the corrected decisions.
+> 2. Review and define the shared contract of `/api/v1/evaluate`, including the input, output and error formats.
+> 3. Verify that both parts can be developed independently, without depending on contract changes that are still pending.
+> 4. Prepare a shared, versioned base that both agents can use. Respect the existing rules for commits, pull requests and approvals; do not publish or merge changes without my authorization.
+> 5. Define clear responsibilities for the shared files, especially `SPEC.md`, `CLAUDE.md`, `PROMPTS.md` and GitHub Actions, avoiding simultaneous changes that cause conflicts.
+>
+> The frontend may use simulated responses based on the approved contract until the new API is available.
+>
+> ### 4. Organizing the sessions
+>
+> I want to keep using this session for the expression backend and open a second Claude Code session dedicated only to the frontend.
+>
+> Prepare the worktrees and the instructions needed so that I can open that second session with the right context.
+>
+> Once the structure is ready, tell me exactly which directory to open and which initial prompt to send to the second agent.
+>
+> Both agents must respect the decisions in `SPEC.md`, keep their changes isolated and follow the planning, checkpoint, testing and review workflow we established.
+>
+> ### 5. Next step
+>
+> First, let's resolve and document the shared decisions. Then let's organize the worktrees and each agent's responsibilities.
+>
+> Do not start implementing either component until its plan is approved.
+>
+> I want you to present the preparation done, the commands run, the Git state, the files changed and the exact steps to start both sessions.
+>
+> The goal is to develop the backend and the frontend in parallel in an orderly way, keeping one coherent specification and avoiding conflicts between agents.
+
+Before closing the specification, the assistant checked the corrected percentage rule and the expression examples with a throwaway exact-arithmetic evaluator, and asked about the ambiguous cases.
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| What does 50 − 200 + 15% compute? | 50 − (200 + 15%) = −180 | D43 |
+| What does 200 + 15% + 10% give? | Compound: 230 + 10% = 253 | D43 |
+| With two parenthesis keys, what does 2 followed by "(" give? | Keep the visible × | D46 |
+
+**Status:** D43 and D46 were corrected, and D50 records the details of the `evaluate` contract. The shared base, branch `docs/block-2-contract`, holds D39 to D50 and the contract in [docs/SPEC.md](docs/SPEC.md#5-expressions). Both parts start from it, and `CLAUDE.md` assigns the shared files.
+
+**Approval, push and handoff.** Original (Spanish), pasted as Markdown:
+
+> Perfecto. Apruebo la organización del desarrollo paralelo y las decisiones compartidas que acabamos de documentar.
+>
+> Antes de cerrar esta sesión y limpiar el contexto, quiero que hagas lo siguiente:
+>
+> 1. Publicá la rama `docs/block-2-contract` y abrí el Pull Request correspondiente para que CodeRabbit revise la especificación compartida, las decisiones D39–D50 y el contrato de `/api/v1/evaluate`.
+>
+> 2. No hagas merge del PR sin mi autorización. Si aparecen observaciones de CodeRabbit, dejalas identificadas para resolverlas en la siguiente sesión.
+>
+> 3. Creá un archivo de transferencia de contexto en `C:\Projects\precizzle-design\block-2-handoff.md`. Este archivo debe permitir que dos agentes nuevos continúen trabajando sin depender de la memoria de esta conversación.
+>
+> Incluí:
+> - Estado general del proyecto y bloques completados.
+> - Arquitectura actual y decisiones técnicas importantes.
+> - Estado de las ramas, worktrees, commits y PRs.
+> - Contrato de la API de expresiones y decisiones compartidas.
+> - Separación de responsabilidades entre backend y frontend.
+> - Archivos de documentación que deben consultar.
+> - Verificaciones realizadas y resultados.
+> - Trabajo pendiente y próximos checkpoints.
+> - Restricciones de Git, commits, revisiones y aprobaciones.
+> - Cualquier detalle importante de esta sesión que no esté documentado.
+>
+> 4. Verificá que ambos worktrees estén preparados y que los cambios importantes estén guardados. No modifiques las especificaciones matemáticas aprobadas ni comiences nuevas implementaciones.
+>
+> 5. Presentame un resumen final breve con el enlace del PR, el estado de Git, la ubicación del archivo de transferencia y los próximos pasos para cada agente.
+>
+> Después de completar esto, detené el trabajo. Voy a limpiar el contexto y comenzar dos sesiones independientes, una para backend y otra para frontend.
+>
+> No avances con la entrevista del backend en esta sesión. La retomaremos después de limpiar la memoria.
+
+English translation:
+
+> Perfect. I approve the organization of the parallel development and the shared decisions we just documented.
+>
+> Before closing this session and clearing the context, I want you to do the following:
+>
+> 1. Publish the `docs/block-2-contract` branch and open the corresponding Pull Request, so that CodeRabbit reviews the shared specification, decisions D39–D50 and the `/api/v1/evaluate` contract.
+>
+> 2. Do not merge the PR without my authorization. If CodeRabbit makes observations, leave them identified so they can be resolved in the next session.
+>
+> 3. Create a context handoff file at `C:\Projects\precizzle-design\block-2-handoff.md`. This file must let two new agents keep working without depending on the memory of this conversation.
+>
+> Include:
+> - The general state of the project and the completed blocks.
+> - The current architecture and the important technical decisions.
+> - The state of the branches, worktrees, commits and PRs.
+> - The expression API contract and the shared decisions.
+> - The split of responsibilities between backend and frontend.
+> - The documentation files they must read.
+> - The checks performed and their results.
+> - Pending work and the next checkpoints.
+> - The Git, commit, review and approval constraints.
+> - Any important detail of this session that is not documented.
+>
+> 4. Verify that both worktrees are ready and that the important changes are saved. Do not change the approved mathematical specifications or start new implementations.
+>
+> 5. Give me a brief final summary with the PR link, the Git state, the location of the handoff file and the next steps for each agent.
+>
+> After completing this, stop working. I will clear the context and start two independent sessions, one for the backend and one for the frontend.
+>
+> Do not move forward with the backend interview in this session. We will resume it after clearing the memory.
+
+**Status:** The shared base was pushed and its pull request opened for the CodeRabbit review. The handoff file lives outside the repository, next to the mockups.
+
+### 4.4 Part 2a: Expression API
+
+Branch `feat/expression-api`, in the worktree `C:\Projects\precizzle-expression-api`. Only the 2a session writes in this section.
+
+### 4.5 Part 2b: Frontend
+
+Branch `feat/frontend`, in the worktree `C:\Projects\precizzle-frontend`. Only the 2b session writes in this section.
