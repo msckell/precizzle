@@ -1656,3 +1656,21 @@ English translation:
 > Keep the usual checkpoints, tests and verification. Do not push or open PRs without my authorization.
 
 **Status:** Approved. The limited exception is documented under D81 in `docs/SPEC.md`; the original implementation plan remains preserved verbatim.
+
+#### Milestone 2 checkpoint
+
+Implemented the plain TypeScript editor model, immutable insertion and deletion, cursor navigation, serialization and error position mapping, screen-reader wording, string-only result formatting, the evaluate client and messages, and validated versioned history. The Equation interface remains for Milestone 3.
+
+The D81 exception has regression tests for exact fraction chips, approximate results, unary minus signs, explicit groups around the percentage and explicit groups around its base. Power serialization also preserves structural ownership: a percentage outside an exponent is `(2^(3))%`, while a percentage inside it is `2^(3%)`. Appending another power groups the preceding power as its base. These are translations of the editor tree using D42 and D74, not changes to backend mathematics.
+
+Implementation details: cursor columns are clamped when moving to a shorter slot; a move clears structure selection; typing at a selected structure's cursor preserves the structure; edits that would join two decimal points in one number are ignored; a leading decimal point exposed by editing is repaired with `0`. API cancellations propagate to the caller so a replaced request need not show a network error. History validates result text and every tree node, bounds nesting at the API's 100-level limit, and treats an unreadable or invalid history as empty. The display follows D11's full display for five or fewer fractional digits and applies four-digit initial truncation to longer repeating decimals.
+
+Verification from `frontend/`:
+
+- `npm run lint`, `npm run format:check`, `npm run typecheck` and `npm run build`: passed.
+- `npm run coverage`: 11 files and 347 tests passed; 99.70% statements, 99.64% branches, 100% functions and lines. Every Milestone 2 module has 100% statement coverage except `editor/edit.ts`, at 99.32%.
+- Three reproducible sequences cover 900 mixed editing actions, checking immutability, cursor validity, well-formed number runs and complete serialization spans.
+- The normal Vite development proxy and the real backend verified 65 expressions through `evaluate`; all 68 expression/request fixtures match HTTP status, content type and the complete response body. This includes D54, D55, the D81 exception, the approved mockup calculations and exact result chaining.
+- The cancellation-during-body-read test retains the MSW request and injects the read failure after transport completion: aborting a streaming MSW response directly triggered an unrelated Undici assertion. The client behavior remains covered without suppressing unhandled errors.
+
+**Status:** Milestone 2 complete, awaiting the owner's checkpoint review before Milestone 3. No backend implementation changes, push or PR. `AGENTS.md` still matches `CLAUDE.md` exactly. The temporary browser mock remains scheduled for removal before the frontend PR; ordinary functional verification uses the real API.
