@@ -2180,12 +2180,12 @@ Before the questions, the assistant checked that the candidate base image tags e
 
 **Milestone 1 approval.** Original (Spanish):
 
-> Perfecto, apruebo el Milestone 1 y autorizo continuar con el Milestone 2.
+> Perfecto, apruebo el Hito 1 y autorizo continuar con el Hito 2.
 >
 > Respecto a los dos puntos pendientes:
 >
 > 1. Verificá que el proceso PID 1408 corresponda efectivamente al backend antiguo de Precizzle. Si lo confirmás y no está siendo utilizado por otra sesión, podés cerrarlo para liberar el puerto 8080. No cierres procesos que no puedas identificar con seguridad.
-> 2. Estoy de acuerdo con trasladar la revisión visual al Milestone 2. Prefiero que comprobemos la interfaz directamente desde el contenedor Docker, junto con la comunicación con la API real.
+> 2. Estoy de acuerdo con trasladar la revisión visual al Hito 2. Prefiero que comprobemos la interfaz directamente desde el contenedor Docker, junto con la comunicación con la API real.
 >
 > Continuá con el Dockerfile multistage y .dockerignore según el plan aprobado.
 >
@@ -2193,7 +2193,7 @@ Before the questions, the assistant checked that the candidate base image tags e
 >
 > Mantené el alcance definido y las pruebas habituales. No agregues funcionalidades nuevas.
 >
-> Cuando completes el Milestone 2, guardá los cambios en commits locales y detenete en el checkpoint para revisar los resultados.
+> Cuando completes el Hito 2, guardá los cambios en commits locales y detenete en el checkpoint para revisar los resultados.
 >
 > No hagas push, abras PRs ni mergees sin mi autorización.
 
@@ -2220,13 +2220,13 @@ The process was a leftover `go run .` of the backend from an earlier session, wh
 
 **Milestone 2 approval and CLAUDE.md.** Original (Spanish):
 
-> Perfecto, apruebo el Milestone 2 y autorizo comenzar el Milestone 3.
+> Perfecto, apruebo el Hito 2 y autorizo comenzar el Hito 3.
 >
 > Respecto a CLAUDE.md y AGENTS.md, prefiero la primera alternativa: reemplazar la sección obsoleta “Block 2: parallel work” por las instrucciones y comandos actuales de Docker.
 >
 > Quiero que ambos archivos sigan siendo idénticos y respeten el límite de 80 líneas. Conservá las reglas generales de calidad, revisión y aprobaciones que sigan vigentes. El historial del trabajo paralelo ya está documentado en PROMPTS.md y Git.
 >
-> Continuá con el Milestone 3 según el plan aprobado: agregar el job Docker al CI, documentar cómo construir y ejecutar la imagen en el README y completar el registro del Bloque 3 en PROMPTS.md.
+> Continuá con el Hito 3 según el plan aprobado: agregar el job Docker al CI, documentar cómo construir y ejecutar la imagen en el README y completar el registro del Bloque 3 en PROMPTS.md.
 >
 > Ejecutá las verificaciones correspondientes y confirmá que los cambios de documentación reflejen el funcionamiento real del contenedor.
 >
