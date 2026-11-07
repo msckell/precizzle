@@ -1,0 +1,127 @@
+:root {
+  font-family: "Nunito Variable", Nunito, system-ui, sans-serif;
+  color: #392757;
+  background: #fff;
+  font-synthesis: none;
+  font-variant-numeric: tabular-nums;
+  --ink: #392757;
+  --muted: #6e6384;
+  --line: #e9e4f0;
+  --border: #d9d2e4;
+  --wash: #f7f5fa;
+  --mint: #3ed9ab;
+  --mint-soft: #e2f8f0;
+  --green-text: #0a7d5a;
+  --purple: #a346d0;
+  --purple-soft: #f4eafa;
+  --purple-text: #8a2fb8;
+  --coral: #ee6072;
+  --coral-soft: #fdecef;
+  --coral-text: #c2304a;
+  --orange-soft: #fff0e5;
+  --orange-text: #b54a00;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--purple);
+  outline-offset: 4px;
+}
+button:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+h1,
+h2,
+p {
+  margin: 0;
+}
+.calculator {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  min-height: 100svh;
+}
+.sheet {
+  min-width: 0;
+  padding: 32px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.workspace {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.controls {
+  min-width: 0;
+  border-left: 1px solid var(--line);
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1.5px solid var(--border);
+  background: white;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 700;
+}
+.icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+@media (max-width: 899px) {
+  .calculator {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+  }
+  .sheet {
+    padding: 20px 16px 12px;
+    gap: 18px;
+  }
+  .workspace {
+    gap: 16px;
+  }
+  .controls {
+    border-left: 0;
+    padding: 12px 16px 24px;
+  }
+}
