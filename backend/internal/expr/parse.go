@@ -16,7 +16,7 @@ const (
 
 const sqrtToken = "sqrt("
 
-// node is a parsed expression: an *operand, a *unary, a *binary or a *sum.
+// node is a parsed expression: an *operand, a *unary, a *binary, an *applied or a *sum.
 type node any
 
 // operand is a number or a value in brackets.
@@ -54,13 +54,21 @@ type sumTerm struct {
 	percents []percent
 }
 
-// percent is a term that is only a percentage, B% with or without minus signs
-// in front. It follows + or - and applies to the term before it (D43).
+// percent is an operand that is only a percentage, B% with or without minus
+// signs in front. It follows +, -, * or / at opPos and applies to the operand
+// before it with the D7 rules (D43, D55).
 type percent struct {
-	op   byte
-	negs []int
-	base node
-	pos  int
+	op    byte
+	opPos int
+	negs  []int
+	base  node
+	pos   int
+}
+
+// applied is A × B% or A ÷ B%, one operation with the D7 rules (D55).
+type applied struct {
+	x node
+	p percent
 }
 
 // operator is the position of an operation in the text, for the limits of D45.
@@ -143,7 +151,7 @@ func (p *parser) sum() (node, error) {
 		}
 		if isPercent {
 			last := &terms[len(terms)-1]
-			last.percents = append(last.percents, asPercent(c, y))
+			last.percents = append(last.percents, asPercent(c, pos, y))
 		} else {
 			terms = append(terms, sumTerm{op: c, pos: pos, x: y})
 		}
@@ -154,9 +162,10 @@ func (p *parser) sum() (node, error) {
 	return &sum{terms}, nil
 }
 
-// asPercent unwraps a term that is only a percentage, -…-B%, as the parser built it.
-func asPercent(op byte, x node) percent {
-	p := percent{op: op}
+// asPercent unwraps an operand that is only a percentage, -…-B%, as the
+// parser built it. op is the operator in front of it, at opPos.
+func asPercent(op byte, opPos int, x node) percent {
+	p := percent{op: op, opPos: opPos}
 	for {
 		u := x.(*unary)
 		if u.op == '%' {
@@ -174,9 +183,13 @@ func (p *parser) term() (node, bool, error) {
 	x, isPercent, err := p.signed()
 	for c := p.peek(); err == nil && (c == '*' || c == '/'); c = p.peek() {
 		pos := p.consume(false)
-		var y node
-		y, _, err = p.signed()
-		x, isPercent = &binary{c, pos, x, y}, false
+		y, yPercent, yErr := p.signed()
+		if yPercent {
+			x = &applied{x, asPercent(c, pos, y)}
+		} else {
+			x = &binary{c, pos, x, y}
+		}
+		isPercent, err = false, yErr
 	}
 	return x, isPercent, err
 }

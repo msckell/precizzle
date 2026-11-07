@@ -1,6 +1,7 @@
 package expr
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -59,6 +60,17 @@ func TestEvaluate(t *testing.T) {
 		{"compound on the last term", "50+200+15%+10%", "303", calc.Exact},
 		{"compound on a subtracted term", "50-200+15%-10%", "-157", calc.Exact},
 
+		// A × B% and A ÷ B% are one operation (D55).
+		{"one rounding in a quotient", "[1/3]/[~1.4142135623730950488]%", "~23.57022603955158414672", calc.Approximate},
+		{"tiny percentage in a product", "100*1e-999%", "0." + strings.Repeat("0", 998) + "1", calc.Exact},
+		{"negated percentage in a product", "200*-15%", "-30", calc.Exact},
+		{"negated percentage in a quotient", "200/-15%", "-4000/3", calc.Repeating},
+		{"product before the percentage", "2*3*15%", "0.9", calc.Exact},
+		{"quotient by a percentage, then a product", "200/15%*3", "4000", calc.Exact},
+		{"product with a percentage inside a sum", "200+50*15%", "207.5", calc.Exact},
+		{"percentage first in a product is plain", "15%*200", "30", calc.Exact},
+		{"powered percentage in a product is plain", "200*15%^2", "4.5", calc.Exact},
+
 		// Intermediate results (D44).
 		{"approximation spreads", "[~2]+1", "~3", calc.Approximate},
 		{"approximate zero stays approximate", "sqrt(2)*0", "~0", calc.Approximate},
@@ -95,6 +107,11 @@ func TestEvaluateErrors(t *testing.T) {
 		{"plain percentage too precise", "[1e-999]%", calc.ErrResultTooPrecise, 8},
 		{"percentage term too large points to the %", "[9e39]+20%", calc.ErrResultTooLarge, 9},
 		{"later percentage term too large", "5+[9e39]+20%", calc.ErrResultTooLarge, 11},
+		{"product with a percentage too large points to the %", "[9e39]*200%", calc.ErrResultTooLarge, 10},
+		{"quotient by a percentage too large points to the %", "1/1e-999%", calc.ErrResultTooLarge, 8},
+		{"quotient by a negated zero percentage points to the /", "5/-0%", calc.ErrDivisionByZero, 1},
+		{"percentage base in a product fails", "2*sqrt(-4)%", calc.ErrNegativeSquareRoot, 2},
+		{"left operand of a product with a percentage fails", "sqrt(-4)*15%", calc.ErrNegativeSquareRoot, 0},
 
 		// Evaluation runs from left to right and stops at the first failure.
 		{"first failure wins", "1/0+sqrt(-4)", calc.ErrDivisionByZero, 1},
@@ -140,18 +157,30 @@ func TestPercentageMatchesD7(t *testing.T) {
 		{"*", calc.PercentMultiply},
 		{"/", calc.PercentDivide},
 	}
-	for _, operands := range [][2]string{{"200", "15"}, {"1/3", "~2.5"}, {"-7.5", "1/8"}, {"2/3", "-12.5"}} {
-		base, percent := operands[0], operands[1]
+	// The last pairs need rounding or break a limit when B ÷ 100 is computed
+	// on its own, so they fail unless A × B% and A ÷ B% are one operation (D55).
+	pairs := [][2]string{
+		{"200", "15"}, {"1/3", "~2.5"}, {"-7.5", "1/8"}, {"2/3", "-12.5"}, {"200", "0"},
+		{"1/3", "~1.4142135623730950488"}, {"100", "1e-999"}, {"1", "1e-999"}, {"9e39", "200"},
+	}
+	for _, pair := range pairs {
+		base, percent := pair[0], pair[1]
 		for _, o := range operators {
 			expression := "[" + base + "]" + o.symbol + "[" + percent + "]%"
 			want, wantErr := calc.ApplyPercentage(parse(base), o.op, parse(percent))
-			if got, err := Evaluate(expression); got != want || err != nil || wantErr != nil {
-				t.Errorf("Evaluate(%q) = %+v, %v, want %+v, %v", expression, got, err, want, wantErr)
-			}
+			matchesCalc(t, expression, want, wantErr)
 		}
-		want, _ := calc.Percentage(parse(percent))
-		if got, err := Evaluate("[" + percent + "]%"); got != want || err != nil {
-			t.Errorf("Evaluate(%q) = %+v, %v, want %+v", "["+percent+"]%", got, err, want)
-		}
+		want, wantErr := calc.Percentage(parse(percent))
+		matchesCalc(t, "["+percent+"]%", want, wantErr)
+	}
+}
+
+// matchesCalc checks that an expression returns the result of a direct calc
+// call, or an error with the same cause.
+func matchesCalc(t *testing.T, expression string, want calc.Result, wantErr error) {
+	t.Helper()
+	got, err := Evaluate(expression)
+	if got != want || (wantErr == nil) != (err == nil) || (wantErr != nil && !errors.Is(err, wantErr)) {
+		t.Errorf("Evaluate(%q) = %+v, %v, want %+v, %v", expression, got, err, want, wantErr)
 	}
 }

@@ -1,6 +1,7 @@
 package expr
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/msckell/precizzle/backend/internal/calc"
@@ -63,6 +64,12 @@ func eval(n node) (calc.Number, error) {
 		}
 		r, err := binaryOps[n.op](x, y)
 		return next(r, err, n.pos)
+	case *applied:
+		x, err := eval(n.x)
+		if err != nil {
+			return x, err
+		}
+		return applyPercent(x, n.p)
 	default:
 		return evalSum(n.(*sum))
 	}
@@ -97,9 +104,18 @@ func evalTerm(t sumTerm) (calc.Number, error) {
 	return x, err
 }
 
-// applyPercent computes T + B% or T - B%, where the percent B carries the
-// minus signs written in front of it (D43).
-func applyPercent(t calc.Number, p percent) (calc.Number, error) {
+// percentOps maps the operator in front of a percentage to its D7 rule.
+var percentOps = map[byte]calc.PercentOperator{
+	'+': calc.PercentAdd,
+	'-': calc.PercentSubtract,
+	'*': calc.PercentMultiply,
+	'/': calc.PercentDivide,
+}
+
+// applyPercent computes A + B%, A - B%, A × B% or A ÷ B% as one operation
+// with the D7 rules, where the percent B carries the minus signs written in
+// front of it (D43, D55).
+func applyPercent(a calc.Number, p percent) (calc.Number, error) {
 	b, err := eval(p.base)
 	for k := len(p.negs) - 1; k >= 0 && err == nil; k-- {
 		b, err = negate(b, p.negs[k])
@@ -107,11 +123,10 @@ func applyPercent(t calc.Number, p percent) (calc.Number, error) {
 	if err != nil {
 		return b, err
 	}
-	op := calc.PercentAdd
-	if p.op == '-' {
-		op = calc.PercentSubtract
+	r, err := calc.ApplyPercentage(a, percentOps[p.op], b)
+	if errors.Is(err, calc.ErrDivisionByZero) {
+		return next(r, err, p.opPos)
 	}
-	r, err := calc.ApplyPercentage(t, op, b)
 	return next(r, err, p.pos)
 }
 
