@@ -99,3 +99,48 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the image
+        run: docker build -t precizzle .
+
+      - name: Start the container
+        run: docker run -d --name precizzle -p 127.0.0.1:8080:8080 precizzle
+
+      - name: Wait until it is healthy
+        run: |
+          for _ in $(seq 1 30); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' precizzle)"
+            if [ "$status" = healthy ]; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::The container is $status after 30 seconds."
+          exit 1
+
+      # A smoke test of both layers (D91): the API computes exactly, and / serves the app.
+      - name: Smoke test
+        run: |
+          result="$(curl -sS http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "0.1+0.2"}')"
+          echo "$result"
+          if [ "$result" != '{"value":"0.3","decimal":"0.3","kind":"exact"}' ]; then
+            echo "::error::0.1+0.2 did not return 0.3."
+            exit 1
+          fi
+          if ! curl -sSf http://127.0.0.1:8080/ | grep -q '<div id="root">'; then
+            echo "::error::/ does not serve the app's HTML."
+            exit 1
+          fi
+
+      - name: Show the container logs
+        if: failure()
+        run: docker logs precizzle
