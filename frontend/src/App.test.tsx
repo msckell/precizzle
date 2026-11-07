@@ -93,6 +93,55 @@ describe("calculator input", () => {
     ).toBeInTheDocument();
     expect(requests).toHaveLength(0);
   });
+  it("moves through structures with the arrow keys, Home and End", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const expression = (name: string) =>
+      expect(
+        screen.getByRole("group", { name: `Expression: ${name}` }),
+      ).toBeInTheDocument();
+    await user.keyboard("1/2{ArrowUp}5");
+    expression("fraction 15 over 2 end fraction");
+    await user.keyboard("{ArrowDown}{End}{ArrowRight}^2{ArrowDown}+3");
+    expression("fraction 15 over 2 end fraction squared plus 3");
+    await user.keyboard("{ArrowLeft}{ArrowLeft}{ArrowUp}0");
+    expression(
+      "fraction 15 over 2 end fraction to the power of 20 end exponent plus 3",
+    );
+    await user.keyboard("{ArrowDown}{Home}{Delete}");
+    expect(document.querySelector(".fraction.selected")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expression("empty");
+  });
+  it("edits with the sign, power and clear keys", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    for (const label of ["7", "Toggle sign", "Power", "2"])
+      await user.click(screen.getByRole("button", { name: label }));
+    expect(
+      screen.getByRole("group", { name: "Expression: minus 7 squared" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Clear expression" }));
+    expect(
+      screen.getByRole("group", { name: "Expression: empty" }),
+    ).toBeInTheDocument();
+  });
+  it("dims the result when the cursor is placed in the evaluated expression", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.keyboard("0.1+0.2=");
+    await screen.findByTestId("result-value");
+    fireEvent.click(container.querySelector(".equation .digit")!, {
+      clientX: 0,
+    });
+    expect(screen.getByRole("region", { name: "Result" })).toHaveClass(
+      "dimmed",
+    );
+    await user.keyboard("3");
+    expect(
+      screen.getByRole("group", { name: "Expression: 03.1 plus 0.2" }),
+    ).toBeInTheDocument();
+  });
 });
 
 describe("results", () => {
