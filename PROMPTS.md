@@ -1483,3 +1483,140 @@ Before the questions, the assistant checked MathLive 0.111.4 (MIT, 5.8 MB unpack
 The assistant decided three implementation details and listed them in the interview summary: D84, D85 and D86. The option chosen in round 3 for serialization gave (1/2)² written as `1/2^2` as its example of a silent error. That example was wrong, since both give 1/4, so D81 uses (2/3)², where `2/3^2` gives 2/9 instead of 4/9.
 
 **Status:** The owner approved the decisions ("perfecto, aprobado") and the plan that contains them: [docs/plans/block-2b-frontend.md](docs/plans/block-2b-frontend.md).
+
+#### Continuation from Milestone 2
+
+Written in English and pasted as Markdown.
+
+> I'm continuing the development of Precizzle, my full-stack calculator project, using a new coding agent.
+>
+> You are responsible for **Block 2b — Frontend**, specifically continuing from Milestone 2.
+>
+> Your working directory is:
+>
+> `C:\Projects\precizzle-frontend`
+>
+> Your branch is:
+>
+> `feat/frontend`
+>
+> The previous agent completed Milestone 1, and the implementation plan has already been approved.
+>
+> ### 1. Set up AGENTS.md
+>
+> This project was previously developed using Claude Code, so its instructions are stored in `CLAUDE.md`.
+>
+> I want you to create an `AGENTS.md` file in the repository root by copying the complete contents of `CLAUDE.md`.
+>
+> - Preserve `CLAUDE.md` unchanged.
+> - Keep the instructions identical.
+> - Do not rewrite, summarize, or remove existing rules.
+> - If `AGENTS.md` already exists, inspect it before making changes.
+> - Use `AGENTS.md` as your primary project instruction file going forward.
+>
+> ### 2. Recover the project context
+>
+> Before implementing anything, read and understand:
+>
+> - `AGENTS.md`
+> - `docs/prompts/00-master-prompt.md`
+> - `docs/SPEC.md`
+> - `docs/plans/block-2b-frontend.md`
+> - `PROMPTS.md`, especially Section 4.5
+> - The relevant Git history and current repository state.
+>
+> Verify that you are working in the correct worktree and branch.
+>
+> Understand the existing architecture, approved frontend decisions (D71–D86), API contract, testing requirements, and milestone checkpoints.
+>
+> Do not reopen previously approved decisions or introduce new features.
+>
+> ### 3. Synchronize with the completed backend
+>
+> The backend Expression API (Block 2a) has been completed and merged into `main`.
+>
+> The merge commit is `f753ad1`.
+>
+> Before starting Milestone 2:
+>
+> 1. Run `git fetch origin`.
+> 2. Merge `origin/main` into `feat/frontend`, never rebase.
+> 3. Preserve all existing commits and local changes.
+> 4. If Git conflicts arise, explain them and ask for my approval before resolving them.
+> 5. Verify that the updated specification includes D54 and D55.
+> 6. Run the existing frontend checks.
+>
+> Once the merge is complete, make sure `AGENTS.md` contains the latest instructions from `CLAUDE.md`.
+>
+> ### 4. Update the API integration
+>
+> The real backend endpoint is now available:
+>
+> `POST /api/v1/evaluate`
+>
+> It follows Section 5 of the specification.
+>
+> Update the MSW fixtures to reflect the finalized API behavior, particularly D54 and D55.
+>
+> Important examples:
+>
+> - `(2+` reports `invalid_expression` at position 3.
+> - `(2+3` reports position 0.
+> - `200*15% = 30`.
+> - `200/15% = 4000/3`.
+>
+> Expression errors use `position`, while request-level errors follow the exceptions defined in the specification.
+>
+> From now on, I want normal application development and functional verification to use the real backend whenever appropriate.
+>
+> Keep MSW for automated testing, but remove the temporary browser development mock before the frontend PR, as previously agreed.
+>
+> ### 5. Begin Milestone 2
+>
+> Once the repository is synchronized and the context has been recovered, proceed with **Milestone 2 of the approved frontend plan**.
+>
+> Follow `docs/plans/block-2b-frontend.md` exactly.
+>
+> My priorities are:
+>
+> - Correct mathematical expression editing.
+> - Reliable cursor movement and insertion.
+> - Editable fractions, roots, exponents, and parentheses.
+> - Exact preservation of mathematical values.
+> - Correct serialization into the backend expression syntax.
+> - Clean, maintainable React and TypeScript architecture.
+> - Comprehensive automated tests.
+>
+> Preserve the approved Equation UI design and all existing product decisions.
+>
+> Do not redesign the interface or expand the scope.
+>
+> ### 6. Development workflow
+>
+> Continue following the established workflow:
+>
+> - Respect the approved plan and milestone checkpoints.
+> - Write and run appropriate tests.
+> - Maintain the required coverage thresholds.
+> - Run lint, formatting, type checking, and build verification.
+> - Use focused, descriptive commits.
+> - Document important changes according to the repository conventions.
+> - Do not push, open pull requests, or merge into main without my explicit authorization.
+>
+> Keep your work focused and your explanations concise.
+>
+> If you encounter a genuine technical issue that requires changing the approved specification, explain it and ask before proceeding.
+>
+> ### 7. Start now
+>
+> First, verify the repository state, synchronize the branch, create `AGENTS.md`, and recover the project context.
+>
+> Give me a brief summary of the current status and the scope of Milestone 2.
+>
+> Then begin implementing Milestone 2 according to the approved plan.
+>
+> Stop at the next required checkpoint and present the results for my review.
+
+**Status:** Fetched `origin` and merged `origin/main` (`f753ad1`) into `feat/frontend` without conflicts, in merge commit `0129b1e`. Created `AGENTS.md` as an exact copy of the merged `CLAUDE.md`. The initial frontend checks passed. Updated MSW fixtures for D54, D55, request-level errors and serialized examples; all 52 fixtures match the real API's complete body, HTTP status and content type. Lint, formatting, typecheck, 24 tests, coverage and build pass. Statement coverage is 100% of the existing one-statement application skeleton; editor coverage does not exist yet. Normal functional verification now uses the real backend. The temporary browser mock remains scheduled for removal before the PR.
+
+**Specification checkpoint before Milestone 2:** Real API verification exposed an interaction between D81 and D55. `[1/3]/[~1.4142135623730950488]%` returns `~23.57022603955158414672`. D81's fraction form, `(([1/3])/([~1.4142135623730950488]%))`, instead returns `~23.57022603955158414339`: grouping the denominator makes its percentage a separate intermediate operation. The proposed exception, `(([1/3])/[~1.4142135623730950488]%)`, returns the D55 result. Proposal pending owner approval: retain D81 for ordinary fractions, but omit the denominator's added parentheses when it consists only of a percentage operand, optionally preceded by unary minus signs. Preserve explicit parentheses entered by the user and all other grouping. No specification, plan or backend implementation was changed, and Milestone 2 implementation is pending this decision.
