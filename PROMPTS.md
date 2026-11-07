@@ -912,3 +912,280 @@ Branch `feat/expression-api`, in the worktree `C:\Projects\precizzle-expression-
 ### 4.5 Part 2b: Frontend
 
 Branch `feat/frontend`, in the worktree `C:\Projects\precizzle-frontend`. Only the 2b session writes in this section.
+
+#### Starting prompt
+
+Written in English and pasted as Markdown.
+
+> I want you to develop **Block 2b: Frontend** of Precizzle, my personal full-stack calculator project.
+>
+> You are working in a dedicated Git worktree:
+>
+> `C:\Projects\precizzle-frontend`
+>
+> Your branch is:
+>
+> `feat/frontend`
+>
+> Another Claude Code agent is simultaneously developing Block 2a (Expression API) in:
+>
+> `C:\Projects\precizzle-expression-api`
+>
+> You must work independently, without modifying the backend agent's files, worktree, or branch.
+>
+> ### 1. Restore the complete project context
+>
+> Before doing anything else, read:
+>
+> - `CLAUDE.md`, especially the parallel development rules.
+> - `docs/prompts/00-master-prompt.md`.
+> - `docs/SPEC.md`, including the frontend requirements, D39–D50, and Section 5.
+> - The existing plans in `docs/plans/`.
+> - `PROMPTS.md`.
+> - `C:\Projects\precizzle-design\block-2-handoff.md`.
+> - The relevant Git history.
+>
+> Verify that you are on the correct branch, that the worktree is clean, and that you have the approved shared API contract.
+>
+> Check the current status of the shared documentation PR.
+>
+> The specifications and approved decisions are the source of truth.
+>
+> ### 2. Frontend responsibilities
+>
+> You are responsible for developing the React and TypeScript frontend using the approved **Equation (B)** visual direction.
+>
+> The existing visual reference is:
+>
+> `C:\Projects\precizzle-design\precizzle-directions.html`
+>
+> The frontend must support the functionality established in the specification, including:
+>
+> - A mathematical expression editor with a real, movable cursor.
+> - Inserting and removing operators at the cursor position.
+> - Editable visual structures for fractions, square roots, and exponents.
+> - Full expressions with multiple operators and parentheses.
+> - Two independent parentheses buttons: `(` and `)`.
+> - Proper mathematical precedence.
+> - Exact result preservation when chaining calculations.
+> - Clear distinction between exact, repeating, and approximate results.
+> - Expandable decimal results.
+> - Calculation history with Load, Use, and Clear History.
+> - Keyboard and mouse input.
+> - Responsive desktop and mobile layouts.
+> - Accessible interactions and helpful error messages.
+>
+> Preserve the established precision and calculation rules.
+>
+> Use the approved colors, typography, and Equation design direction.
+>
+> Prioritize usability, clarity, reliability, and maintainable code.
+>
+> ### 3. Coordinate with the backend
+>
+> The backend agent is implementing:
+>
+> `POST /api/v1/evaluate`
+>
+> The API contract is already documented in Section 5 of `docs/SPEC.md`.
+>
+> Develop against that contract.
+>
+> Until the backend is ready, use MSW to simulate API responses, including mathematical results and structured errors.
+>
+> Do not change the shared contract or backend implementation.
+>
+> If you discover an incompatibility, explain it and request my approval before making architectural changes.
+>
+> Respect the file ownership rules documented in `CLAUDE.md`.
+>
+> Before final integration, incorporate the approved backend changes from main following the established Git workflow and test against the real API.
+>
+> ### 4. First task: updated visual mockup
+>
+> Before planning the implementation, I want you to show me an updated mockup of the Equation interface.
+>
+> It must incorporate:
+>
+> - The editable expression system.
+> - Cursor placement.
+> - Visual fractions, roots, and exponents.
+> - Results reused as exact-value tokens.
+> - Two independent parentheses buttons.
+> - A balanced button layout.
+> - Desktop and mobile adaptations.
+>
+> Use the existing approved design as the starting point.
+>
+> Do not introduce unrelated visual redesigns or additional features.
+>
+> Show me the updated mockup and wait for my approval before committing to the implementation approach.
+>
+> ### 5. Interview and planning
+>
+> Once the mockup is approved, conduct a focused interview about the frontend decisions that remain unresolved.
+>
+> Prioritize:
+>
+> - Physical keyboard behavior.
+> - Accessibility.
+> - Component architecture.
+> - The internal expression editor model.
+> - Serialization of visual mathematical structures into the API syntax.
+> - Testing strategy.
+>
+> Do not reopen previously settled decisions.
+>
+> Document new decisions according to the established conventions, using the Block 2b decision range starting at D71.
+>
+> Record this initial prompt in the designated section of `PROMPTS.md`.
+>
+> After the interview, enter Plan Mode.
+>
+> Prepare the implementation plan for:
+>
+> `docs/plans/block-2b-frontend.md`
+>
+> The frontend CI must include linting, type checking, tests, and at least 90% coverage.
+>
+> Follow the established checkpoints and approval workflow.
+>
+> Do not begin implementation until I approve the plan.
+>
+> Do not push, create PRs, or merge without my explicit authorization.
+>
+> ### 6. Start now
+>
+> First, confirm that you have successfully recovered the project context, verified the worktree, and understood the shared contract.
+>
+> Then begin with the updated Equation mockup.
+>
+> Keep your explanations concise and focused on decisions that require my input.
+
+#### Updated mockup
+
+The assistant showed a static HTML mockup of the Equation direction with the expression editor: the cursor, fractions, square roots and exponents as structures, result chips, the two parenthesis keys, and desktop and mobile layouts. Like the earlier mockups, it was not added to the repository. The owner asked for these changes before closing it.
+
+**Repeating results.** Original (Spanish):
+
+> Perfecto, un par de cambios a hacer. En primer lugar, cuando el resultado es periódico tenés que mostrar los primeros cuatro números y luego, o sea poner los puntos suspensivos. ¿Ok? Para no sobrecargar la user interface
+
+English translation:
+
+> Perfect, a couple of changes to make. First, when the result is repeating, you have to show the first four digits and then, I mean, put the ellipsis. OK? So as not to overload the user interface.
+
+**Decorations.** Two images came with it: a mockup with decorations as the reference, and the logo as the palette. Original (Spanish):
+
+> Utilizando la imagen adjuntada, necesito que implementes los detalles de decoración, particularmente en la parte inferior izquierda de la UI, ese tono verde, y en la parte superior derecha esa gama de tonos. De momento no modifiques ningún botón ni nada. Incluí simplemente las decoraciones inferiores y superiores y no modifiques ningún color de ningún botón ni nada. Para ello necesito que interpretes bien la imagen y tengas en cuenta que estamos siguiendo la paleta de colores de la imagen que te voy a adjuntar a continuación (solo los colores internos al logo, ignora el fondo)
+
+English translation:
+
+> Using the attached image, I need you to add the decoration details, particularly that green tone at the bottom left of the UI, and that range of tones at the top right. For now, don't change any button or anything. Just include the bottom and top decorations, and don't change the color of any button or anything. For that, I need you to read the image well and keep in mind that we are following the color palette of the image I'm attaching next (only the colors inside the logo, ignore the background).
+
+| Question | Selected answer |
+|---|---|
+| Where do the decorations go? | Every screen, desktop and mobile, history included |
+| Is the faint peach shape at the bottom included? | Yes, very soft |
+
+**Logo.** Original (Spanish):
+
+> Bueno, perfecto, nos toca al lado del nombre del proyecto, incorpores el logo adjuntado. De forma chica y sutil, ¿ok?
+
+English translation:
+
+> Good, perfect, next to the project's name, add the attached logo. Small and subtle, OK?
+
+The assistant pointed out that the reference image is the logo of a real company, recorded in the Block 2 handoff as a color reference only, and offered original marks instead. The owner chose a "P" monogram, with this note. Original (Spanish):
+
+> Fabricaba entonces la primera PE con el monograma indicado y los colores de la paleta apropiada.
+
+English translation:
+
+> Then make the first P with the chosen monogram and the colors of the right palette.
+
+**The P of the name.** Original (Spanish):
+
+> No, no, no, necesito que la P en sí de la palabra, del proyecto, el nombre del proyecto, tenga los colores internos como si fuese el logo de la empresa. Es decir, necesito que tenga varias paritas de colores dentro de la P. Para eso obviamente necesito que aumentes ligeramente el tamaño del logo a ver cómo quedaría
+
+English translation:
+
+> No, no, no, I need the P itself of the word, of the project, the project's name, to have the inner colors as if it were the company's logo. That is, I need it to have several small pieces of color inside the P. For that, obviously, I need you to slightly increase the size of the logo, to see how it would look.
+
+**Three variants of the P.** Pasted as Markdown. Original (Spanish):
+
+> Quiero que probemos mejorar un poco más la «P» del logo de Precizzle. Me gusta el concepto actual, pero siento que todavía podemos hacer que se vea más profesional, fluida y distintiva.
+>
+> Me gustaría que exploremos tres variantes:
+>
+> 1. **Una versión refinada de la actual:** mantener prácticamente la misma P, pero mejorar las proporciones, las curvas y cómo se conectan los colores.
+> 2. **Una versión tipo cinta continua:** que el turquesa, el coral y el naranja formen una P más fluida, como si fuera una sola cinta que se va doblando.
+> 3. **Una versión más geométrica y original:** que tenga una silueta más distintiva y que funcione incluso como símbolo independiente o favicon.
+>
+> Preferiría sacar el violeta de la P y mantener el resto de la palabra Precizzle como está.
+>
+> No quiero cambiar demasiado la identidad que ya conseguimos. Busco perfeccionarla, especialmente las transiciones entre colores y la geometría de la letra.
+>
+> Generame una imagen comparando las tres variantes, mostrando tanto la P individual como el logotipo completo, así podemos elegir cuál queda mejor.
+
+English translation:
+
+> I want us to try to improve the "P" of the Precizzle logo a bit more. I like the current concept, but I feel we can still make it look more professional, fluid and distinctive.
+>
+> I'd like us to explore three variants:
+>
+> 1. **A refined version of the current one:** keep practically the same P, but improve the proportions, the curves and how the colors connect.
+> 2. **A continuous ribbon version:** the turquoise, coral and orange form a more fluid P, as if it were a single ribbon folding over itself.
+> 3. **A more geometric and original version:** with a more distinctive silhouette that works even as a standalone symbol or favicon.
+>
+> I'd rather remove the purple from the P and keep the rest of the word Precizzle as it is.
+>
+> I don't want to change the identity we already achieved too much. I want to perfect it, especially the transitions between colors and the geometry of the letter.
+>
+> Generate an image comparing the three variants, showing both the P on its own and the full logotype, so we can choose which one works best.
+
+The assistant generated the comparison image outside the repository, and the owner chose the ribbon: "opcion 2" ("option 2").
+
+**Softer equals key.** Original (Spanish):
+
+> Antes de cerrar el mockup, necesitaría una pequeña corrección: el botón de igual está en un verde muy fuerte. Necesito que le bajes un par de tonalidades para que esté más integrado con la estética sutil que manejamos
+
+English translation:
+
+> Before closing the mockup, I'd need a small correction: the equals button is a very strong green. I need you to bring it down a couple of shades, so it fits better with the subtle look we're going for.
+
+**Status:** The owner closed the mockup: "Listo, perfecto, cerramos el mockup entonces." ("Done, perfect, let's close the mockup, then."). Final: D71, D72.
+
+#### Interview
+
+Before the questions, the assistant checked MathLive 0.111.4 (MIT, 5.8 MB unpacked), the `@fontsource-variable/nunito` version and the backend's handling of leading zeros.
+
+##### Round 1: editor model, structures, deleting, after a result
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| How is the expression editor built? | Our own tree | D73 |
+| What do ÷ and xʸ do with a number or group before the cursor? | Take the preceding operand | D74 |
+| What does Backspace do right after a fraction, root or exponent? | Select, then delete | D75 |
+| What does each key do right after a result? | A digit starts over | D76 |
+
+##### Round 2: keyboard, square root key, screen readers, long expressions
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| When does the physical keyboard reach the calculator? | Always, except in the history | D77 |
+| Which key inserts √? | `r` | D77 |
+| How much does a screen reader read? | Only results and errors | D78 |
+| What happens when the expression is wider than the screen? | It scrolls sideways | D79 |
+
+##### Round 3: state, serialization, development mock, tests
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| How is the app state organized? | useReducer and a pure module | D80 |
+| How are structures written for the API? | Always with parentheses | D81 |
+| How is the interface checked by hand before 2a is merged? | MSW in the browser, temporary | D82 |
+| Which test levels does the frontend have? | Unit and integration, no end-to-end | D83 |
+
+The assistant decided three implementation details and listed them in the interview summary: D84, D85 and D86. The option chosen in round 3 for serialization gave (1/2)² written as `1/2^2` as its example of a silent error. That example was wrong, since both give 1/4, so D81 uses (2/3)², where `2/3^2` gives 2/9 instead of 4/9.
+
+**Status:** The owner approved the decisions ("perfecto, aprobado") and the plan that contains them: [docs/plans/block-2b-frontend.md](docs/plans/block-2b-frontend.md).
