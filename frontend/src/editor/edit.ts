@@ -252,8 +252,30 @@ export function insertSqrt(state: EditorState): EditorState {
   );
 }
 
+function startsOperand(node: Node | undefined): boolean {
+  return (
+    !!node &&
+    (node.type === "chip" ||
+      node.type === "frac" ||
+      node.type === "sqrt" ||
+      isNumberChar(node) ||
+      isChar(node, "("))
+  );
+}
+
+// A chip glued to an operand on either side is invalid syntax, so D87 adds the visible × that D46 adds for √ and (.
 export function insertChip(state: EditorState, result: Result): EditorState {
-  return splice(state, state.cursor.index, 0, [{ type: "chip", ...result }]);
+  const { index } = state.cursor;
+  const row = rowAt(state.root, state.cursor.path)!;
+  const before = needsMultiply(state) ? [charNode("*")] : [];
+  const after = startsOperand(row[index]) ? [charNode("*")] : [];
+  return splice(
+    state,
+    index,
+    0,
+    [...before, { type: "chip", ...result }, ...after],
+    index + before.length + 1,
+  );
 }
 
 function unaryMinus(row: Row, index: number): boolean {

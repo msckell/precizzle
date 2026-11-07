@@ -333,27 +333,33 @@ describe("history", () => {
     );
     expect(requests.at(-1)?.body).toBe('{"expression":"[1/3]*3"}');
   });
-  it("uses an approximate result as a chip at the cursor", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    await user.keyboard("r2=");
-    await screen.findByTestId("result-value");
-    await user.keyboard("1500*");
-    await user.click(historyButton());
-    expect(entries()[0]).toHaveTextContent("Approx.≈1.41421…");
-    await user.click(within(entries()[0]).getByRole("button", { name: "Use" }));
-    expect(historyButton()).toHaveFocus();
-    expect(screen.getByText("≈1.41421…")).toHaveClass("result-chip");
-    await user.keyboard("=");
-    await waitFor(() =>
-      expect(screen.getByTestId("result-value")).toHaveTextContent(
-        "≈2121.32034…",
-      ),
-    );
-    expect(requests.at(-1)?.body).toBe(
-      '{"expression":"1500*[~1.4142135623730950488]"}',
-    );
-  });
+  it.each(["1500*", "1500"])(
+    "uses an approximate result as a chip at the cursor after %s",
+    async (typed) => {
+      const user = userEvent.setup();
+      const { container } = render(<App />);
+      await user.keyboard("r2=");
+      await screen.findByTestId("result-value");
+      await user.keyboard(typed);
+      await user.click(historyButton());
+      expect(entries()[0]).toHaveTextContent("Approx.≈1.41421…");
+      await user.click(
+        within(entries()[0]).getByRole("button", { name: "Use" }),
+      );
+      expect(historyButton()).toHaveFocus();
+      expect(screen.getByText("≈1.41421…")).toHaveClass("result-chip");
+      expect(container.querySelectorAll(".equation .operator")).toHaveLength(1);
+      await user.keyboard("=");
+      await waitFor(() =>
+        expect(screen.getByTestId("result-value")).toHaveTextContent(
+          "≈2121.32034…",
+        ),
+      );
+      expect(requests.at(-1)?.body).toBe(
+        '{"expression":"1500*[~1.4142135623730950488]"}',
+      );
+    },
+  );
   it("asks before clearing and empties both the list and the storage", async () => {
     const user = userEvent.setup();
     render(<App />);

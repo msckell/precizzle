@@ -54,6 +54,64 @@ describe("insertion", () => {
       ]);
     },
   );
+  const chip: Node = { type: "chip", ...third };
+  const times: Node = { type: "char", char: "*" };
+  const half: Node = { type: "frac", num: chars("1"), den: chars("2") };
+  const root: Node = { type: "sqrt", body: chars("2") };
+  const square: Node = { type: "pow", exp: chars("2") };
+  it.each<[string, Row, number, Row, number]>([
+    ["after a number", chars("2"), 1, [...chars("2*"), chip], 3],
+    ["after a trailing dot", chars("2."), 2, [...chars("2.*"), chip], 4],
+    ["after a group", chars("(2)"), 3, [...chars("(2)*"), chip], 5],
+    ["after a percentage", chars("15%"), 3, [...chars("15%*"), chip], 5],
+    ["after a chip", [chip], 1, [chip, times, chip], 3],
+    ["after a fraction", [half], 1, [half, times, chip], 3],
+    ["after a root", [root], 1, [root, times, chip], 3],
+    [
+      "after a power",
+      [...chars("2"), square],
+      2,
+      [...chars("2"), square, times, chip],
+      4,
+    ],
+    ["before a number", chars("5"), 0, [chip, ...chars("*5")], 1],
+    ["before a group", chars("(5)"), 0, [chip, ...chars("*(5)")], 1],
+    ["before a chip", [chip], 0, [chip, times, chip], 1],
+    ["before a fraction", [half], 0, [chip, times, half], 1],
+    ["before a root", [root], 0, [chip, times, root], 1],
+    [
+      "between two digits",
+      chars("23"),
+      1,
+      [...chars("2*"), chip, ...chars("*3")],
+      3,
+    ],
+    ["in an empty row", [], 0, [chip], 1],
+    ["after an operator", chars("2+"), 2, [...chars("2+"), chip], 3],
+    ["after a unary minus", chars("-"), 1, [...chars("-"), chip], 2],
+    ["after an opening parenthesis", chars("("), 1, [...chars("("), chip], 2],
+    ["before an operator", chars("+2"), 0, [chip, ...chars("+2")], 1],
+    ["before a closing parenthesis", chars(")"), 0, [chip, ...chars(")")], 1],
+    ["before a percent sign", chars("%"), 0, [chip, ...chars("%")], 1],
+    ["before a power it becomes the base of", [square], 0, [chip, square], 1],
+  ])(
+    "inserts a chip %s with a visible multiplication only where needed",
+    (_, row, index, expected, cursor) => {
+      expect(insertChip(state(row, index), third)).toEqual(
+        state(expected, cursor),
+      );
+    },
+  );
+  it("inserts a chip with multiplication inside a slot", () => {
+    const editor: EditorState = {
+      root: [{ type: "sqrt", body: chars("4") }],
+      cursor: { path: [{ index: 0, slot: "body" }], index: 1 },
+    };
+    expect(insertChip(editor, third)).toEqual({
+      root: [{ type: "sqrt", body: [...chars("4*"), chip] }],
+      cursor: { path: [{ index: 0, slot: "body" }], index: 3 },
+    });
+  });
   it.each(["", "2+", "("])("does not multiply after %s", (input) => {
     expect(insertParen(state(input), "(").root).toEqual(chars(input + "("));
     expect(insertSqrt(state(input)).root).toEqual([
