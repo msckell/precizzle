@@ -8,6 +8,7 @@ import { useKeyboard } from "./useKeyboard.ts";
 import { Equation } from "./components/Equation.tsx";
 import { Keypad } from "./components/Keypad.tsx";
 import { ResultCard } from "./components/ResultCard.tsx";
+import { Decorations } from "./components/Decorations.tsx";
 import { Header } from "./components/Header.tsx";
 import { HistoryPanel } from "./components/HistoryPanel.tsx";
 
@@ -68,6 +69,7 @@ function App() {
   };
   return (
     <main className="calculator">
+      <Decorations />
       <section className="sheet">
         <Header
           count={state.history.length}

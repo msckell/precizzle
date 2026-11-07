@@ -582,6 +582,45 @@ p {
   border-radius: 999px;
   background: white;
 }
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+}
+.brand svg {
+  height: calc(0.705em * 1.3);
+  width: calc(0.705em * 1.3 * 0.96);
+  margin-right: 0.03em;
+  flex: none;
+}
+.decorations {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.decoration {
+  position: absolute;
+  display: block;
+}
+.decoration.bottom-left {
+  left: 0;
+  bottom: 0;
+  width: 30%;
+  height: 54%;
+}
+.decoration.top-right {
+  right: 0;
+  top: 0;
+  width: 28%;
+  height: 24%;
+}
+.decoration.bottom {
+  left: 37%;
+  bottom: 0;
+  width: 26%;
+  height: 12%;
+}
 .history {
   position: sticky;
   top: 32px;
@@ -589,6 +628,9 @@ p {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+.history > .decorations {
+  display: none;
 }
 .history-heading {
   display: flex;
@@ -807,5 +849,22 @@ p {
   }
   .history-action {
     padding: 0 10px;
+  }
+  .history > .decorations {
+    display: block;
+  }
+  .decoration.bottom-left {
+    width: 62%;
+    height: 36%;
+  }
+  .decoration.top-right {
+    width: 66%;
+    height: 20%;
+  }
+  .decoration.bottom {
+    left: auto;
+    right: 0;
+    width: 62%;
+    height: 10%;
   }
 }

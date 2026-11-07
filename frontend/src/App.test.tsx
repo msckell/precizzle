@@ -19,11 +19,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("calculator input", () => {
-  it("renders the Precizzle heading", () => {
-    render(<App />);
-    expect(
-      screen.getByRole("heading", { name: "Precizzle" }),
-    ).toBeInTheDocument();
+  it("renders the ribbon P brand and hides the decorations", () => {
+    const { container } = render(<App />);
+    const heading = screen.getByRole("heading", { name: "Precizzle" });
+    expect(within(heading).getByRole("img", { name: "P" })).toBeInTheDocument();
+    expect(container.querySelector(".decorations")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
   });
   it.each(["keyboard", "keypad"])(
     "sends the same decimal calculation with the %s",

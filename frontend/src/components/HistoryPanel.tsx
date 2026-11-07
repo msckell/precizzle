@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { Result } from "../editor/model.ts";
 import { formatResult } from "../format.ts";
 import type { HistoryEntry } from "../history.ts";
+import { Decorations } from "./Decorations.tsx";
 import { Equation } from "./Equation.tsx";
 
 interface Props {
@@ -39,6 +40,7 @@ export function HistoryPanel({
   }, [confirmClear]);
   return (
     <section className="history" aria-labelledby="history-title">
+      <Decorations />
       <div className="history-heading">
         <h2 id="history-title">History</h2>
         <button
