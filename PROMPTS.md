@@ -1099,6 +1099,48 @@ The assistant decided how `api` maps errors with `position` (D53). The owner app
 
 **Status:** The owner approved the plan, including D54, the position rules that SPEC §5 leaves open: [docs/plans/block-2a-expression-api.md](docs/plans/block-2a-expression-api.md).
 
+#### Execution
+
+**Milestone 1 approval and the merge of the shared base.** Original (Spanish):
+
+> Perfecto, apruebo los tres puntos.
+>
+> 1. Autorizo el merge del PR #3 utilizando un merge commit, siempre que siga aprobado, sin conflictos y con el CI en verde.
+> 2. Autorizo cambiar `C:\Projects\precizzle` a `main` y ejecutar `git pull` para actualizar el repositorio principal.
+> 3. Autorizo eliminar la rama `docs/block-2-contract`, tanto local como remota, una vez que hayas verificado que el merge fue exitoso y que los cambios están correctamente preservados.
+>
+> Después, incorporá `main` en `feat/expression-api` mediante `git merge main`, sin rebase, como establecimos.
+>
+> Continuá con el Milestone 2 del Bloque 2a, siguiendo el plan aprobado y comenzando por los tests.
+>
+> Respecto al frontend, no modifiques su worktree. Preparame un mensaje breve para enviarle al segundo agente informando las correcciones de posiciones de errores, especialmente `(2+` → posición 3 y los casos nuevos de D54. Aclará que D54 todavía está en la rama de backend y no necesariamente en su copia de la SPEC.
+>
+> Mantené los checkpoints y las verificaciones correspondientes. No hagas push de la rama de implementación ni abras nuevos PRs sin mi autorización.
+
+English translation:
+
+> Perfect, I approve the three points.
+>
+> 1. I authorize the merge of PR #3 with a merge commit, as long as it is still approved, without conflicts and with CI green.
+> 2. I authorize switching `C:\Projects\precizzle` to `main` and running `git pull` to update the main repository.
+> 3. I authorize deleting the `docs/block-2-contract` branch, both local and remote, once you have verified that the merge succeeded and the changes are correctly preserved.
+>
+> Then, bring `main` into `feat/expression-api` with `git merge main`, without rebase, as we established.
+>
+> Continue with Milestone 2 of Block 2a, following the approved plan and starting with the tests.
+>
+> Regarding the frontend, do not modify its worktree. Prepare a short message for me to send to the second agent about the error position fixes, especially `(2+` → position 3 and the new D54 cases. Make clear that D54 is still on the backend branch and not necessarily in its copy of the SPEC.
+>
+> Keep the checkpoints and the corresponding checks. Do not push the implementation branch or open new PRs without my authorization.
+
+PR #3 was merged with a merge commit (`c60b3cb`) and `docs/block-2-contract` was deleted.
+
+While writing the evaluator, the assistant found that two rules of the SPEC disagree. "Every case of D7 returns the same result as the `percentage` endpoint" (D43) clashes with B% as an operation of its own (D44) in A × B% and A ÷ B%. It confirmed the gap with a throwaway test, then asked:
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| In A × B% and A ÷ B%, which rule wins? | Like D7: one operation | D55 |
+
 ### 4.5 Part 2b: Frontend
 
 Branch `feat/frontend`, in the worktree `C:\Projects\precizzle-frontend`. Only the 2b session writes in this section.
