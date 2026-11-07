@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App.tsx";
 import { requests } from "./mocks/handlers.ts";
+import { http, HttpResponse } from "msw/http";
+import { server } from "./mocks/server.ts";
 
 afterEach(() => {
   localStorage.clear();
@@ -173,4 +175,53 @@ describe("results", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Could not copy");
     expect(screen.getByTestId("result-value")).toHaveTextContent("0.3");
   });
+});
+
+describe("errors", () => {
+  it("marks the failing fraction bar and keeps the expression for correction", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.keyboard("250+1/(3-3)=");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "divides by zero",
+    );
+    expect(
+      container.querySelector(".fraction-bar[data-error]"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", {
+        name: /Expression: 250 plus fraction 1 over/,
+      }),
+    ).toBeInTheDocument();
+    await user.keyboard("{Backspace}");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+  it("marks the expression end when an operand is missing", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.keyboard("(2+=");
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "expression is incomplete",
+    );
+    expect(container.querySelector(".end-error")).toBeInTheDocument();
+  });
+  it.each(["network", "malformed"])(
+    "shows a useful %s failure without marking an unrelated element",
+    async (kind) => {
+      server.use(
+        http.post("/api/v1/evaluate", () =>
+          kind === "network"
+            ? HttpResponse.error()
+            : HttpResponse.json({ value: 3 }),
+        ),
+      );
+      const user = userEvent.setup();
+      const { container } = render(<App />);
+      await user.keyboard("2=");
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        kind === "network" ? "Check your connection" : "unexpected response",
+      );
+      expect(container.querySelector("[data-error]")).not.toBeInTheDocument();
+    },
+  );
 });

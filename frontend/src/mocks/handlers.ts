@@ -87,6 +87,8 @@ function ok(value: string, decimal: string, kind: Kind): Success {
 // Every row of SPEC §5 "Expression examples", answered as the real API answers it.
 // The long decimals are built from their digits instead of being written out.
 export const fixtures: Record<string, Success | Problem> = {
+  "250+((1)/((3-3)))": problem("division_by_zero", 8),
+  "((1)/(0))": problem("division_by_zero", 4),
   "(2^(3))%": ok("0.08", "0.08", "exact"),
   "((1)/(2^(3))%)": ok("12.5", "12.5", "exact"),
   "((1)/-(2^(3))%)": ok("-12.5", "-12.5", "exact"),
