@@ -1923,3 +1923,87 @@ Verification:
 - `npm audit` still reports only the development-only `minimatch` advisory listed under "Known issues" in the README.
 
 **Status:** Milestone 4 complete up to the checkpoint before the pull request. No push, PR or merge. No backend changes. The pull request (title, description with screenshots and decisions D71 to D87, and the CodeRabbit protocol) waits for the owner's authorization.
+
+#### Pull request
+
+Original (Spanish):
+
+> Perfecto, apruebo el Hito 4 y la implementación de D87, incluyendo la multiplicación automática a ambos lados de la ficha cuando corresponda.
+>
+> Los resultados de las verificaciones me parecen muy buenos.
+>
+> Quiero que avancemos con el Pull Request del frontend. No hace falta revisar los commits individualmente ahora, porque ya tenemos las pruebas y verificaciones del hito.
+>
+> Preparame el título y la descripción completa del PR, incluyendo las funcionalidades implementadas, las decisiones D71–D87, los resultados de los tests, la cobertura y las pruebas contra el backend real.
+>
+> Incluí también las capturas de escritorio y móvil como evidencia visual.
+>
+> Mostrame el borrador antes de publicarlo. Una vez que lo apruebe, hacemos push, abrimos el PR y seguimos el protocolo habitual de revisión con CodeRabbit.
+>
+> No hagas merge todavía ni introduzcas funcionalidades nuevas.
+
+English translation:
+
+> Great, I approve Milestone 4 and the D87 implementation, including the automatic multiplication on both sides of the chip where it applies.
+>
+> The verification results look very good to me.
+>
+> I want us to move forward with the frontend Pull Request. There is no need to review the individual commits now, because we already have the milestone's tests and checks.
+>
+> Prepare the PR title and full description, including the implemented features, decisions D71–D87, the test results, the coverage and the tests against the real backend.
+>
+> Also include the desktop and mobile screenshots as visual evidence.
+>
+> Show me the draft before publishing it. Once I approve it, we push, open the PR and follow the usual CodeRabbit review protocol.
+>
+> Do not merge yet or introduce new features.
+
+The screenshots were taken with headless Chrome driven over the DevTools protocol, which sets the exact viewport (1280×800 and 390×844) against the real API. They showed a Milestone 3 layout defect: in the desktop history, a long approximate entry broke the "Approx." tag and its digits across lines. It was fixed without changing the design (`fix(ui): keep history values from breaking mid-word`): the tag no longer wraps, and the value moves to its own line when it does not fit. Lint, format, typecheck, the 403 tests and the build passed after the fix.
+
+The owner then asked for an editorial pass on the description:
+
+Original (Spanish):
+
+> Revisé la descripción del PR y en general me gusta mucho. Quiero mantener el contenido técnico, las evidencias y la estructura, pero hacer una última revisión editorial antes de publicarlo.
+>
+> Me gustaría que el inglés suene un poco más natural, como el de un desarrollador explicando su propio trabajo, sin frases demasiado mecánicas ni lenguaje promocional.
+>
+> Hacé estos ajustes:
+>
+> * Reducí las repeticiones entre Summary y Decisions, pero conservá todas las decisiones D71–D87 documentadas.
+> * Reemplazá expresiones algo artificiales como “the owner approved”, “the calculation reads as math” y “a new = aborts the previous request” por formulaciones más naturales.
+> * Revisá la precisión de las afirmaciones sobre los decimales: distinguí correctamente entre las cifras mostradas, el límite de expansión, la representación copiada y el valor exacto conservado internamente. No quiero que el texto sugiera que podemos copiar infinitos decimales.
+> * Evitá afirmaciones absolutas innecesarias, especialmente sobre el uso de JavaScript numbers, sin perder la explicación de que los cálculos los realiza exclusivamente el backend.
+> * Agregá una explicación breve de que desarrollamos el frontend en cuatro hitos, siguiendo la especificación aprobada y verificando cada etapa.
+> * Mantené todas las métricas reales de pruebas, cobertura y verificaciones. No inventes resultados ni exageres la calidad del producto.
+> * Mejorá la legibilidad de How it was tested, separando mejor los grupos de pruebas. Mencioná Vitest explícitamente.
+> * Conservá Out of scope y la advertencia de npm audit.
+> * Asegurate de que las capturas reales reemplacen los placeholders antes de dejar el PR listo para revisión.
+>
+> No quiero que reescribas todo desde cero ni que pierda detalles importantes. Busco una versión ligeramente más concisa, natural, profesional y técnicamente precisa.
+>
+> Mostrame la descripción final corregida antes de hacer el push o abrir el PR. No modifiques el código ni agregues funcionalidades.
+
+English translation:
+
+> I reviewed the PR description and overall I like it a lot. I want to keep the technical content, the evidence and the structure, but do a last editorial pass before publishing it.
+>
+> I would like the English to sound a bit more natural, like a developer explaining their own work, without overly mechanical phrases or promotional language.
+>
+> Make these adjustments:
+>
+> * Reduce the repetition between Summary and Decisions, but keep all decisions D71–D87 documented.
+> * Replace somewhat artificial expressions such as “the owner approved”, “the calculation reads as math” and “a new = aborts the previous request” with more natural wording.
+> * Check the accuracy of the statements about decimals: correctly distinguish the digits shown, the expansion limit, the copied representation and the exact value kept internally. I do not want the text to suggest that we can copy infinite decimals.
+> * Avoid unnecessary absolute statements, especially about the use of JavaScript numbers, without losing the explanation that the calculations are done only by the backend.
+> * Add a short explanation that we developed the frontend in four milestones, following the approved specification and checking each stage.
+> * Keep all the real test, coverage and verification metrics. Do not invent results or exaggerate the product's quality.
+> * Improve the readability of How it was tested, separating the test groups better. Mention Vitest explicitly.
+> * Keep Out of scope and the npm audit warning.
+> * Make sure the real screenshots replace the placeholders before leaving the PR ready for review.
+>
+> I do not want you to rewrite everything from scratch or lose important details. I am looking for a slightly more concise, natural, professional and technically accurate version.
+>
+> Show me the corrected final description before pushing or opening the PR. Do not modify the code or add features.
+
+The revised description separates the digits shown at first (4 or 5), the expansion limit (100 fractional digits), what Copy writes (the API's `decimal`: every digit for exact results, 100 or 20 rounded digits otherwise) and what chips keep (the API's `value`, which for approximate results is the 20-digit approximation). The owner approved it ("Dale aprobado") together with the publishing order: push, open the PR as a draft, attach the screenshots in place of the placeholders, then mark it ready for review so CodeRabbit reviews the final description.
