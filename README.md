@@ -42,6 +42,28 @@ npm run dev         # start the dev server
   - Forcing version 11 with npm `overrides` works in a local test, but it goes outside the versions ESLint supports, so it is not applied.
   - The advisory goes away when ESLint moves to `minimatch` 11.
 
+## Docker
+
+The [`Dockerfile`](Dockerfile) builds one image that runs the whole app: the Go server answers the API and also serves the built frontend. Only Docker is needed. From the repository root, in bash or PowerShell:
+
+```sh
+docker build -t precizzle .
+docker run --rm -d -p 127.0.0.1:8080:8080 --name precizzle precizzle
+```
+
+Open http://127.0.0.1:8080 for the app; the API answers on the same address, so the [API examples](#examples) work unchanged. The port is published only on the loopback address, so other machines on the network cannot reach it.
+
+```sh
+docker ps --filter name=precizzle   # STATUS shows (healthy) once GET /healthz answers
+docker logs precizzle               # server log, empty unless an error occurs
+docker stop precizzle               # stop and remove the container
+```
+
+- The build has three stages: Node builds the frontend, Go builds a static binary, and the final `alpine` image (about 23 MB) holds only the binary and the frontend build.
+- The server runs as the non-root user `precizzle`.
+- Inside the container it listens on `:8080` (`PRECIZZLE_ADDR`) and serves the frontend from the directory in `PRECIZZLE_STATIC_DIR`. Without that variable, as in development, the server answers only the API.
+- The `docker` job in CI builds the image, starts it, waits until it is healthy and checks that `0.1+0.2` returns `0.3` and that `/` serves the app.
+
 ## Frontend
 
 The React and TypeScript app in `frontend/` is a calculator built around an editable equation. It does no arithmetic: every result comes from `POST /api/v1/evaluate`.
