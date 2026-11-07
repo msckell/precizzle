@@ -1859,3 +1859,67 @@ Verification from `frontend/`:
 Known limitation for the owner: "Use" right after a bare number (for example `4` then Use) places the chip next to the number without a ×, as the Milestone 2 editor does, so `=` returns a positioned `invalid_expression`. D46 adds the visible × only for √ and `(`; extending it to chips would be a new decision.
 
 **Status:** Milestone 3 complete, awaiting the owner's checkpoint review before Milestone 4. No backend changes, push or PR. `AGENTS.md` still matches `CLAUDE.md` exactly.
+
+#### Milestone 3 approval, D87 and the start of Milestone 4
+
+The owner approved the Milestone 3 checkpoint ("ok perfecto") and then sent:
+
+Original (Spanish):
+
+> Perfecto, apruebo el inicio del Hito 4.
+>
+> Antes de cerrarlo, quiero resolver las dos decisiones pendientes:
+>
+> 1. **Use:** quiero incorporar D87. Cuando reutilizo un resultado del historial inmediatamente después de un número u otra estructura que admita multiplicación implícita, agregá automáticamente un `×` visible entre ambos. No quiero que la calculadora genere expresiones inválidas por concatenar una ficha con un número. Respetá los operadores existentes y agregá pruebas para los distintos casos.
+>
+> 2. **Handoff:** podés eliminar el archivo temporal del Hito 3, siempre que toda la información importante esté preservada en la documentación definitiva.
+>
+> Después continuá con el Hito 4 según el plan aprobado: CI, README, actualización de AGENTS.md y CLAUDE.md, verificación contra la API real y eliminación del mock temporal de desarrollo.
+>
+> No quiero agregar más funcionalidades ni modificar el diseño aprobado.
+>
+> Ejecutá todas las pruebas y verificaciones necesarias, y dejá el trabajo guardado en commits locales.
+>
+> Cuando termines, detenete en el checkpoint anterior al PR y mostrame los resultados. No hagas push, abras PRs ni mergees sin mi autorización.
+
+English translation:
+
+> Great, I approve the start of Milestone 4.
+>
+> Before closing it, I want to resolve the two pending decisions:
+>
+> 1. **Use:** I want to add D87. When I reuse a result from the history right after a number or another structure that allows implicit multiplication, automatically add a visible `×` between them. I do not want the calculator to build invalid expressions by joining a chip with a number. Respect the existing operators and add tests for the different cases.
+>
+> 2. **Handoff:** you can delete the temporary Milestone 3 file, as long as all the important information is preserved in the final documentation.
+>
+> Then continue with Milestone 4 according to the approved plan: CI, README, updating AGENTS.md and CLAUDE.md, verification against the real API and removal of the temporary development mock.
+>
+> I do not want to add more features or change the approved design.
+>
+> Run all the necessary tests and checks, and save the work in local commits.
+>
+> When you finish, stop at the checkpoint before the PR and show me the results. Do not push, open PRs or merge without my authorization.
+
+**D87**, recorded in `docs/SPEC.md`: "Use" adds a visible × before the chip after a number, a `)`, a `%`, a chip or a structure (the D46 rule), and after the chip before a number, a `(`, a chip, a fraction or a root, because a chip glued on its right side is the same invalid concatenation. Next to an operator or an opening parenthesis, and before a closing parenthesis, a `%` or an exponent, nothing is added. A chip before an exponent becomes its base, which is valid. Chaining after a result starts from an empty row, so it never adds a ×.
+
+The Milestone 3 handoff was removed after checking that its content is preserved: the mockup path is in the Block 2b plan, progress and verification are in the Milestone 3 entries above, and the fixture comparison method is described below.
+
+#### Milestone 4 checkpoint
+
+Done, following the plan:
+
+1. **CI:** a `frontend` job after `backend` in `.github/workflows/ci.yml`. It uses `actions/setup-node@v7` with Node 24 and the npm cache keyed on `frontend/package-lock.json`, and runs `npm ci`, lint, the format check, typecheck, `npm run coverage` (the 90% threshold fails the job) and build.
+2. **Development mock removed:** the `dev:mock` script, `public/mockServiceWorker.js`, `src/mocks/browser.ts`, the startup hook in `main.tsx` and their ESLint and Prettier ignores. MSW stays for the tests. This step ran before the documentation, so `CLAUDE.md` never had to list `dev:mock`.
+3. **`CLAUDE.md` and `AGENTS.md`:** the frontend commands now include coverage, the backend requirement of `npm run dev` and the CI job. The two files are still identical.
+4. **README:** a "Frontend" section right before "Backend API", with running it alongside the backend, the editor and history behavior, the keyboard map, the design notes, and the tests and CI.
+5. **Integration:** `origin/main` has no commits missing from `feat/frontend`, so no new merge was needed.
+
+Verification:
+
+- The CI job's commands from a clean `npm ci`: lint, format check, typecheck and build pass; coverage gives 12 files and 403 tests, 99% statements, 96.79% branches, 100% functions and 99.28% lines.
+- Fixtures against the real API: a Node script imports `fixtures` and `requestFixtures` from `src/mocks/handlers.ts` with Node's TypeScript support and posts each one to `/api/v1/evaluate`. All 70 match the HTTP status, the `Content-Type` and the complete body, both against this branch's backend started with `go run .` on `127.0.0.1:8090` and against the backend on `127.0.0.1:8080`.
+- The block's end-to-end checks in Chrome through the Vite proxy and the real API: `0.1 + 0.2` gives `0.3` Exact; `1 ÷ 3` gives `0.3333…`, and `× 3` sends `[1/3]*3` and gives `1`; `√2` is approximate with ≈; `50 + 200 + 15%` gives `280`; `250 + 1 ÷ (3 − 3)` marks the fraction bar. With D87, `4` and then Use on √2 shows `4 × ≈1.41421…` and sends `4*[~1.4142135623730950488]`, which gives `≈5.65685…`.
+- Identical requests from the keypad and the keyboard, and the layout at 360, 390 and 1280 px, are covered by the tests and the Milestone 3 checks; no styles changed since.
+- `npm audit` still reports only the development-only `minimatch` advisory listed under "Known issues" in the README.
+
+**Status:** Milestone 4 complete up to the checkpoint before the pull request. No push, PR or merge. No backend changes. The pull request (title, description with screenshots and decisions D71 to D87, and the CodeRabbit protocol) waits for the owner's authorization.
