@@ -8,15 +8,24 @@ import { useKeyboard } from "./useKeyboard.ts";
 import { Equation } from "./components/Equation.tsx";
 import { Keypad } from "./components/Keypad.tsx";
 import { ResultCard } from "./components/ResultCard.tsx";
+import { Header } from "./components/Header.tsx";
+import { HistoryPanel } from "./components/HistoryPanel.tsx";
 
 function App() {
   const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const pending = useRef<AbortController | undefined>(undefined);
   const nextRequest = useRef(0);
   useEffect(() => () => pending.current?.abort(), []);
+  const historyButton = useRef<HTMLButtonElement>(null);
+  const historyWasOpen = useRef(false);
   useEffect(() => {
     save(state.history);
   }, [state.history]);
+  useEffect(() => {
+    if (historyWasOpen.current && !state.historyOpen)
+      historyButton.current?.focus();
+    historyWasOpen.current = state.historyOpen;
+  }, [state.historyOpen]);
   const onCommand = (command: Command) => {
     pending.current?.abort();
     if (command.type !== "evaluate") {
@@ -45,9 +54,8 @@ function App() {
           });
       });
   };
-  useKeyboard(onCommand, state.historyOpen, () =>
-    dispatch({ type: "history", open: false }),
-  );
+  const closeHistory = () => dispatch({ type: "history", open: false });
+  useKeyboard(onCommand, state.historyOpen, closeHistory);
   const copy = async () => {
     if (!state.result) return;
     const version = state.resultVersion;
@@ -61,7 +69,14 @@ function App() {
   return (
     <main className="calculator">
       <section className="sheet">
-        <h1>Precizzle</h1>
+        <Header
+          count={state.history.length}
+          historyOpen={state.historyOpen}
+          onToggleHistory={() =>
+            dispatch({ type: "history", open: !state.historyOpen })
+          }
+          historyButton={historyButton}
+        />
         <div className="workspace">
           <Equation
             editor={state.editor}
@@ -80,7 +95,27 @@ function App() {
         </div>
       </section>
       <aside className="controls">
-        <Keypad onCommand={onCommand} />
+        {state.historyOpen ? (
+          <HistoryPanel
+            entries={state.history}
+            confirmClear={state.confirmClear}
+            onClose={closeHistory}
+            onLoad={(entry) => {
+              pending.current?.abort();
+              dispatch({ type: "load", entry });
+            }}
+            onUse={(result) => {
+              pending.current?.abort();
+              dispatch({ type: "use", result });
+            }}
+            onConfirmClear={(confirm) =>
+              dispatch({ type: "confirm-clear", confirm })
+            }
+            onClear={() => dispatch({ type: "clear-history" })}
+          />
+        ) : (
+          <Keypad onCommand={onCommand} />
+        )}
       </aside>
       <p role="status" className="sr-only">
         {state.copyStatus === "copied"

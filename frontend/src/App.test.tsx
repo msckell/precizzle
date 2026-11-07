@@ -1,10 +1,18 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App.tsx";
 import { requests } from "./mocks/handlers.ts";
 import { http, HttpResponse } from "msw/http";
 import { server } from "./mocks/server.ts";
+import { HISTORY_KEY, load, save } from "./history.ts";
+import { chars } from "./test/editor.ts";
 
 afterEach(() => {
   localStorage.clear();
@@ -224,4 +232,201 @@ describe("errors", () => {
       expect(container.querySelector("[data-error]")).not.toBeInTheDocument();
     },
   );
+});
+
+const historyButton = () => screen.getByRole("button", { name: /^History/ });
+const entries = () =>
+  within(screen.getByRole("region", { name: "History" })).getAllByRole(
+    "listitem",
+  );
+
+describe("history", () => {
+  it("loads an entry with its structures and result, then chains it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.keyboard("1/3=");
+    await screen.findByTestId("result-value");
+    await user.keyboard("0.1+0.2=");
+    await waitFor(() =>
+      expect(historyButton()).toHaveAccessibleName("History, 2 calculations"),
+    );
+    await user.click(historyButton());
+    expect(historyButton()).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.queryByRole("button", { name: "Evaluate" }),
+    ).not.toBeInTheDocument();
+    expect(entries()).toHaveLength(2);
+    expect(entries()[0]).toHaveTextContent("= 0.3");
+    expect(
+      within(entries()[1]).getByRole("group", {
+        name: "Expression: fraction 1 over 3 end fraction",
+      }),
+    ).toBeInTheDocument();
+    await user.click(
+      within(entries()[1]).getByRole("button", { name: "Load" }),
+    );
+    expect(
+      screen.queryByRole("region", { name: "History" }),
+    ).not.toBeInTheDocument();
+    expect(historyButton()).toHaveFocus();
+    expect(
+      screen.getByRole("group", {
+        name: "Expression: fraction 1 over 3 end fraction",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("result-value")).toHaveTextContent("0.3333…");
+    await user.keyboard("*3=");
+    await waitFor(() =>
+      expect(screen.getByTestId("result-value")).toHaveTextContent(/^1$/),
+    );
+    expect(requests.at(-1)?.body).toBe('{"expression":"[1/3]*3"}');
+  });
+  it("uses an approximate result as a chip at the cursor", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.keyboard("r2=");
+    await screen.findByTestId("result-value");
+    await user.keyboard("1500*");
+    await user.click(historyButton());
+    expect(entries()[0]).toHaveTextContent("Approx.≈1.41421…");
+    await user.click(within(entries()[0]).getByRole("button", { name: "Use" }));
+    expect(historyButton()).toHaveFocus();
+    expect(screen.getByText("≈1.41421…")).toHaveClass("result-chip");
+    await user.keyboard("=");
+    await waitFor(() =>
+      expect(screen.getByTestId("result-value")).toHaveTextContent(
+        "≈2121.32034…",
+      ),
+    );
+    expect(requests.at(-1)?.body).toBe(
+      '{"expression":"1500*[~1.4142135623730950488]"}',
+    );
+  });
+  it("asks before clearing and empties both the list and the storage", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.keyboard("0.1+0.2=");
+    await screen.findByTestId("result-value");
+    await user.click(historyButton());
+    await user.click(screen.getByRole("button", { name: "Clear history" }));
+    expect(
+      screen.getByRole("group", { name: "Confirm clearing the history" }),
+    ).toHaveTextContent("Delete all 1 calculation?");
+    expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(entries()).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Clear history" })).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "Clear history" }));
+    await user.click(screen.getByRole("button", { name: "Delete all" }));
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+    expect(screen.getByText(/No calculations yet/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Close history" })).toHaveFocus();
+    expect(historyButton()).toHaveAccessibleName("History, 0 calculations");
+    expect(load()).toEqual([]);
+    expect(JSON.parse(localStorage.getItem(HISTORY_KEY)!)).toEqual({
+      version: 1,
+      entries: [],
+    });
+  });
+  it("ignores calculator keys while open and closes with Escape", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.keyboard("12");
+    await user.click(historyButton());
+    expect(screen.getByRole("button", { name: "Close history" })).toHaveFocus();
+    await user.keyboard("5+r={Backspace}");
+    expect(requests).toHaveLength(0);
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("region", { name: "History" }),
+    ).not.toBeInTheDocument();
+    expect(historyButton()).toHaveFocus();
+    expect(
+      screen.getByRole("group", { name: "Expression: 12" }),
+    ).toBeInTheDocument();
+    await user.click(historyButton());
+    await user.click(screen.getByRole("button", { name: "Close history" }));
+    expect(historyButton()).toHaveFocus();
+    await user.click(historyButton());
+    await user.click(historyButton());
+    expect(
+      screen.queryByRole("region", { name: "History" }),
+    ).not.toBeInTheDocument();
+  });
+  it("keeps the history across reloads", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+    await user.keyboard("0.1+0.2=");
+    await screen.findByTestId("result-value");
+    unmount();
+    render(<App />);
+    expect(historyButton()).toHaveAccessibleName("History, 1 calculation");
+    await user.click(historyButton());
+    expect(entries()[0]).toHaveTextContent("= 0.3");
+  });
+});
+
+describe("superseded requests", () => {
+  const slow = () => {
+    let respond = () => {};
+    const signals: AbortSignal[] = [];
+    server.use(
+      http.post("/api/v1/evaluate", async ({ request }) => {
+        signals.push(request.signal);
+        await new Promise<void>((resolve) => (respond = resolve));
+        return HttpResponse.json({ value: "14", decimal: "14", kind: "exact" });
+      }),
+    );
+    return { signals, respond: () => respond() };
+  };
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+  it.each(["Load", "Use"])(
+    "cancels a pending evaluation on %s",
+    async (action) => {
+      save([
+        {
+          expression: chars("0.1+0.2"),
+          result: { value: "0.3", decimal: "0.3", kind: "exact" },
+        },
+      ]);
+      const pending = slow();
+      const user = userEvent.setup();
+      render(<App />);
+      await user.keyboard("2*=");
+      await waitFor(() => expect(pending.signals).toHaveLength(1));
+      expect(screen.getByRole("status")).toHaveTextContent("Calculating…");
+      await user.click(historyButton());
+      await user.click(
+        within(entries()[0]).getByRole("button", { name: action }),
+      );
+      expect(pending.signals[0].aborted).toBe(true);
+      pending.respond();
+      await settle();
+      expect(screen.queryByText("14")).not.toBeInTheDocument();
+      if (action === "Load")
+        expect(screen.getByTestId("result-value")).toHaveTextContent(/^0.3$/);
+      else
+        expect(
+          screen.getByRole("group", {
+            name: "Expression: 2 times 0.3",
+          }),
+        ).toBeInTheDocument();
+      expect(load()).toHaveLength(1);
+    },
+  );
+  it("drops the pending result when the expression is edited", async () => {
+    const pending = slow();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.keyboard("2+3*4=");
+    await waitFor(() => expect(pending.signals).toHaveLength(1));
+    await user.keyboard("5");
+    expect(pending.signals[0].aborted).toBe(true);
+    pending.respond();
+    await settle();
+    expect(screen.queryByTestId("result-value")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Expression: 2 plus 3 times 45" }),
+    ).toBeInTheDocument();
+  });
 });

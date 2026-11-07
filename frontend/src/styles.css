@@ -533,6 +533,204 @@ p {
   height: auto;
   font-size: 1em;
 }
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand {
+  margin-right: auto;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.history-button {
+  padding: 0 16px 0 12px;
+  font-size: 14px;
+}
+.history-button.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: white;
+}
+.history-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-label b {
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--purple-soft);
+  color: var(--purple-text);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.history-button.on .history-label b {
+  background: rgb(255 255 255 / 18%);
+  color: white;
+}
+.icon-button {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: white;
+}
+.history {
+  position: sticky;
+  top: 32px;
+  height: calc(100svh - 64px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.history-heading h2 {
+  margin: 0 auto 0 4px;
+  font-size: 20px;
+  font-weight: 800;
+}
+.history-note,
+.history-empty {
+  margin: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.history-list {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  padding: 10px 12px 10px 16px;
+}
+.history-calculation {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.history-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 19px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.approximate-tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--orange-text);
+  background: var(--orange-soft);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.history-value .approximate-mark {
+  margin: 0;
+}
+.history-action {
+  flex: none;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+.history-action.use {
+  background: var(--mint-soft);
+  border-color: transparent;
+}
+.history-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.clear-history {
+  margin-left: auto;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: white;
+  color: var(--coral-text);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.clear-history .icon {
+  width: 16px;
+  height: 16px;
+}
+.clear-confirmation {
+  margin-top: auto;
+  border: 1.5px solid var(--coral);
+  background: var(--coral-soft);
+  border-radius: 20px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.clear-confirmation span {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.confirmation-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.confirmation-buttons button {
+  height: 46px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: white;
+  font-size: 15px;
+  font-weight: 800;
+}
+.confirmation-buttons .delete-all {
+  background: var(--coral-text);
+  border-color: var(--coral-text);
+  color: white;
+}
 @media (max-width: 899px) {
   .result-card {
     padding: 12px 18px 14px;
@@ -576,5 +774,38 @@ p {
   .controls {
     border-left: 0;
     padding: 12px 16px 24px;
+  }
+  .header {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+  }
+  .brand {
+    grid-column: 2;
+    margin: 0 auto;
+    font-size: 19px;
+  }
+  .history-button {
+    grid-column: 1;
+    grid-row: 1;
+    width: 44px;
+    padding: 0;
+  }
+  .history-label {
+    display: none;
+  }
+  .history {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    height: auto;
+    background: white;
+    padding: 20px 16px 18px;
+    overflow: hidden;
+  }
+  .history-entry {
+    padding: 9px 10px 9px 14px;
+  }
+  .history-action {
+    padding: 0 10px;
   }
 }
