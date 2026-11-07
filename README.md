@@ -48,11 +48,21 @@ The React and TypeScript app in `frontend/` is a calculator built around an edit
 
 ### Running it
 
-Start the backend first, then the dev server:
+The backend and the dev server each keep running in their own terminal. Open two terminals at the repository root.
+
+In the first one, start the backend and leave it running:
 
 ```sh
-cd backend && go run .                  # API on http://127.0.0.1:8080
-cd frontend && npm ci && npm run dev    # app on http://localhost:5173
+cd backend
+go run .              # API on http://127.0.0.1:8080
+```
+
+In the second one, start the frontend:
+
+```sh
+cd frontend
+npm ci                # first time, or after the dependencies change
+npm run dev           # app on http://localhost:5173
 ```
 
 The Vite dev server proxies `/api` to `127.0.0.1:8080`, so the backend must be running before the first calculation. `npm run build` writes the production app to `frontend/dist/`.
