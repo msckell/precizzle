@@ -2063,3 +2063,11 @@ The incremental review of `cf9c6cd` raised one more finding. Two answers were of
 | The status region always formats expansion zero, so "Show more decimals" announces nothing, and an earlier "Full decimal copied" message stays in the region after an expansion | Announce the visible caption ("Showing 40 of 100 decimals.") on each expansion, clear the copy message when expanding, and share the caption text between the card and the announcement | Commit `ea9e677` |
 
 Lint, the format check, typecheck, coverage (408 tests, 99.01% statements) and the build passed before the push.
+
+The review of `c19d7d9` raised another finding. The race it describes is real in the code, but the owner chose to keep the behavior ("Opción A") over rejecting the late copy completion:
+
+| Finding | Selected answer | Final decision |
+|---|---|---|
+| A clipboard write that finishes after "Show more decimals" sets the copy message again, because `copied` only checks `resultVersion`, so it replaces the expansion caption in the live region | Keep the behavior: the window is the few milliseconds `writeText` takes, the copy message is true when it arrives, rejecting it would hide a successful copy on the button and in the live region, and the caption stays visible and is announced again on the next expansion | No change; explained in the thread |
+
+**Status:** CI passes (Backend, Frontend, CodeRabbit check). The threads for the abbreviated announcement and the README are resolved; the expansion and copy-race threads have replies. No merge.
