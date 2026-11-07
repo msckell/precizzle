@@ -58,8 +58,9 @@ Backend, run from `backend/`:
 - Format check: `gofmt -l .` (must print nothing)
 - Vet: `go vet ./...`
 - Test: `go test ./...`
-- Coverage: `go test -cover ./...` (CI fails below 95% in `internal/calc` or 90% in `internal/api`)
-- Benchmark: `go test -run='^$' -bench=PowerWorstCase ./internal/calc`
+- Coverage: `go test -cover ./...` (CI fails below 95% in `internal/calc` or `internal/expr`, or 90% in `internal/api`)
+- Benchmarks: `go test -run='^$' -bench=PowerWorstCase ./internal/calc` and `go test -run='^$' -bench=EvaluateWorstCase ./internal/expr`
+- Fuzz: `go test -run='^$' -fuzz=FuzzEvaluate -fuzztime=60s ./internal/expr` (CI runs only the seed corpus)
 - Build: `go build ./...`
 - Run: `go run .` (listens on `127.0.0.1:8080`; set `PRECIZZLE_ADDR` to change it)
 

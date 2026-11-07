@@ -975,6 +975,234 @@ English translation:
 
 Branch `feat/expression-api`, in the worktree `C:\Projects\precizzle-expression-api`. Only the 2a session writes in this section.
 
+#### Starting prompt
+
+Block plan: [docs/plans/block-2a-expression-api.md](docs/plans/block-2a-expression-api.md)
+
+Original (English):
+
+> I want to resume development of Precizzle, my personal full-stack calculator project, after clearing the previous conversation context.
+>
+> You are responsible for **Block 2a: Expression API**.
+>
+> Your designated working directory is:
+>
+> `C:\Projects\precizzle-expression-api`
+>
+> Your branch is:
+>
+> `feat/expression-api`
+>
+> Another Claude Code agent will independently develop Block 2b (Frontend) in a separate Git worktree. Do not modify its directory or branch.
+>
+> ### 1. Restore the project context
+>
+> Before making any changes, carefully read:
+>
+> - `CLAUDE.md`, especially the parallel development rules.
+> - `docs/prompts/00-master-prompt.md`.
+> - `docs/SPEC.md`, including D39–D50 and Section 5.
+> - The relevant existing plans in `docs/plans/`.
+> - `PROMPTS.md`.
+> - `C:\Projects\precizzle-design\block-2-handoff.md`.
+> - The relevant Git history and current branch status.
+>
+> Verify the current worktree, Git branch, working tree cleanliness, and the status of the shared documentation PR.
+>
+> If this Claude session was launched from another directory, do not switch branches in that worktree. Tell me how to relaunch it in the designated backend directory.
+>
+> Treat the repository's approved specifications as the source of truth.
+>
+> Do not make assumptions about completed work. Verify the actual project state.
+>
+> ### 2. Your responsibilities
+>
+> Implement the expression evaluation backend according to the approved specification.
+>
+> The new endpoint is:
+>
+> `POST /api/v1/evaluate`
+>
+> It must support mathematical expressions with correct operator precedence, parentheses, powers, roots, percentages, exact fractions, validation, complexity limits, and structured errors.
+>
+> Preserve the existing mathematical precision guarantees and the behavior of all seven existing endpoints.
+>
+> The shared contract and product decisions are already defined. Do not reopen settled decisions unless you discover a genuine technical problem.
+>
+> Pay particular attention to the approved percentage behavior, including:
+>
+> - `50 + 200 + 15% = 280`
+> - `50 - 200 + 15% = -180`
+> - `200 + 15% + 10% = 253`
+> - `(50 + 200) + 15% = 287.5`
+>
+> Follow the exact grammar, validation rules, error formats, and evaluation semantics documented in the specification.
+>
+> ### 3. Coordinate with the frontend
+>
+> The frontend agent is developing against the same API contract using mocked responses.
+>
+> Do not modify frontend files.
+>
+> If you discover that the shared API contract must change, stop and ask for my approval before making changes.
+>
+> Respect the file ownership rules established in `CLAUDE.md`.
+>
+> If the shared documentation PR has not been merged, you may proceed with the interview and planning, but do not begin implementation against an unapproved or changing contract.
+>
+> ### 4. Continue the development workflow
+>
+> Resume exactly where the previous session stopped.
+>
+> The next step is the short backend interview covering the remaining technical decisions, including parser architecture, test coverage, and performance benchmarks.
+>
+> Ask only the questions that are genuinely unresolved.
+>
+> After the interview, enter Plan Mode and prepare the implementation plan for Block 2a.
+>
+> Follow our established workflow:
+>
+> - Approved plan before implementation.
+> - Clear checkpoints.
+> - Focused commits.
+> - Automated tests and coverage verification.
+> - CodeRabbit review.
+> - No push, PR creation, or merge without my explicit authorization.
+>
+> Preserve the established documentation and prompt logging conventions.
+>
+> ### 5. Start now
+>
+> First, give me a concise status report confirming:
+>
+> 1. Which worktree and branch you are using.
+> 2. What has already been completed.
+> 3. Whether the shared documentation PR is pending, approved, or merged.
+> 4. What remains to be done for Block 2a.
+>
+> Then proceed with the pending backend interview.
+>
+> Do not repeat questions that were already answered in the approved specification.
+
+#### Interview and the review of the shared base
+
+PR #3, the shared base, was still open with two Minor findings from CodeRabbit. The assistant verified both against the SPEC and asked about them in the same round as the backend questions.
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| PR #3: in `(2+`, does `invalid_expression` point to the missing operand (3) or to the unclosed `(` (0)? | The missing operand wins: 3 | Commit `e4e9041` on `docs/block-2-contract` |
+| PR #3: should D41 say that `position` replaces `field` only in errors about the expression? | Yes, rewrite D41, without the hyphen in "out of scope list" | Commit `752f983` on `docs/block-2-contract` |
+| Where do the parser and the evaluator live, and what coverage does CI require? | New `internal/expr` package, 95% | D51 |
+| Which performance and robustness checks does the parser get? | A worst-case benchmark and a fuzz target run with `go test` | D52 |
+
+The assistant decided how `api` maps errors with `position` (D53). The owner approved the two fixes, the push of `docs/block-2-contract` and the replies on both CodeRabbit threads, which were then resolved.
+
+**Status:** The owner approved the plan, including D54, the position rules that SPEC §5 leaves open: [docs/plans/block-2a-expression-api.md](docs/plans/block-2a-expression-api.md).
+
+#### Execution
+
+**Milestone 1 approval and the merge of the shared base.** Original (Spanish):
+
+> Perfecto, apruebo los tres puntos.
+>
+> 1. Autorizo el merge del PR #3 utilizando un merge commit, siempre que siga aprobado, sin conflictos y con el CI en verde.
+> 2. Autorizo cambiar `C:\Projects\precizzle` a `main` y ejecutar `git pull` para actualizar el repositorio principal.
+> 3. Autorizo eliminar la rama `docs/block-2-contract`, tanto local como remota, una vez que hayas verificado que el merge fue exitoso y que los cambios están correctamente preservados.
+>
+> Después, incorporá `main` en `feat/expression-api` mediante `git merge main`, sin rebase, como establecimos.
+>
+> Continuá con el Milestone 2 del Bloque 2a, siguiendo el plan aprobado y comenzando por los tests.
+>
+> Respecto al frontend, no modifiques su worktree. Preparame un mensaje breve para enviarle al segundo agente informando las correcciones de posiciones de errores, especialmente `(2+` → posición 3 y los casos nuevos de D54. Aclará que D54 todavía está en la rama de backend y no necesariamente en su copia de la SPEC.
+>
+> Mantené los checkpoints y las verificaciones correspondientes. No hagas push de la rama de implementación ni abras nuevos PRs sin mi autorización.
+
+English translation:
+
+> Perfect, I approve the three points.
+>
+> 1. I authorize the merge of PR #3 with a merge commit, as long as it is still approved, without conflicts and with CI green.
+> 2. I authorize switching `C:\Projects\precizzle` to `main` and running `git pull` to update the main repository.
+> 3. I authorize deleting the `docs/block-2-contract` branch, both local and remote, once you have verified that the merge succeeded and the changes are correctly preserved.
+>
+> Then, bring `main` into `feat/expression-api` with `git merge main`, without rebase, as we established.
+>
+> Continue with Milestone 2 of Block 2a, following the approved plan and starting with the tests.
+>
+> Regarding the frontend, do not modify its worktree. Prepare a short message for me to send to the second agent about the error position fixes, especially `(2+` → position 3 and the new D54 cases. Make clear that D54 is still on the backend branch and not necessarily in its copy of the SPEC.
+>
+> Keep the checkpoints and the corresponding checks. Do not push the implementation branch or open new PRs without my authorization.
+
+PR #3 was merged with a merge commit (`c60b3cb`) and `docs/block-2-contract` was deleted.
+
+While writing the evaluator, the assistant found that two rules of the SPEC disagree. "Every case of D7 returns the same result as the `percentage` endpoint" (D43) clashes with B% as an operation of its own (D44) in A × B% and A ÷ B%. It confirmed the gap with a throwaway test, then asked:
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| In A × B% and A ÷ B%, which rule wins? | Like D7: one operation | D55 |
+
+**Status:** Milestones 2 and 3 were approved. The owner approved the push and [PR #4](https://github.com/msckell/precizzle/pull/4).
+
+#### Pull request and review
+
+##### CodeRabbit triage ([PR #4](https://github.com/msckell/precizzle/pull/4))
+
+| Finding | Selected answer | Final decision |
+|---|---|---|
+| D43 still lists `200 * 15%` and `200 / 15%` under "Anywhere else, B% = B ÷ 100", which D55 replaced | Keep the original text and mark D43 as partly superseded, as the log does for D1 and D11 | Commit `fe9d507` |
+
+**Fix.** Original (Spanish):
+
+> Prefiero mantener el historial de decisiones. Aplicá la primera alternativa, agregando la aclaración de que D55 reemplaza parcialmente D43.
+>
+> No modifiques el comportamiento matemático ni elimines las decisiones anteriores.
+>
+> Después hacé el commit, actualizá el PR #4 y respondé al comentario de CodeRabbit. Verificá que los checks sigan en verde y no hagas merge todavía.
+
+English translation:
+
+> I prefer to keep the decision history. Apply the first alternative, adding the note that D55 partly supersedes D43.
+>
+> Do not change the mathematical behavior or remove earlier decisions.
+>
+> Then make the commit, update PR #4 and reply to the CodeRabbit comment. Check that the checks stay green and do not merge yet.
+
+**Status:** CodeRabbit approved the pull request, and the thread was resolved.
+
+##### Merge
+
+Original (Spanish):
+
+> Perfecto, apruebo los dos primeros puntos.
+>
+> Registrá el cierre del PR y el triage de CodeRabbit en PROMPTS.md, hacé el commit y el push correspondiente.
+>
+> Una vez que CodeRabbit vuelva a aprobar la revisión y todos los checks estén en verde, te autorizo a mergear el PR #4 utilizando un merge commit.
+>
+> Después, actualizá main en C:\Projects\precizzle y verificá que todo haya quedado correctamente integrado.
+>
+> Por ahora prefiero conservar la rama feat/expression-api y su worktree. Los eliminaremos cuando terminemos de integrar y verificar el frontend con la API real.
+>
+> No modifiques el worktree del frontend. Cuando termines, preparame un resumen breve para pasarle al segundo agente, indicando que la API ya está integrada en main, cualquier cambio relevante del contrato y los pasos necesarios para sincronizar su rama.
+>
+> Después de eso, damos por cerrado el Bloque 2a.
+
+English translation:
+
+> Perfect, I approve the first two points.
+>
+> Record the PR closing and the CodeRabbit triage in PROMPTS.md, and make the corresponding commit and push.
+>
+> Once CodeRabbit approves the review again and all checks are green, I authorize you to merge PR #4 with a merge commit.
+>
+> Then, update main in C:\Projects\precizzle and check that everything was integrated correctly.
+>
+> For now I prefer to keep the feat/expression-api branch and its worktree. We will remove them once we finish integrating and checking the frontend against the real API.
+>
+> Do not modify the frontend worktree. When you are done, prepare a short summary for me to pass to the second agent, stating that the API is already integrated in main, any relevant contract change and the steps needed to sync its branch.
+>
+> After that, we consider Block 2a closed.
+
 ### 4.5 Part 2b: Frontend
 
 Branch `feat/frontend`, in the worktree `C:\Projects\precizzle-frontend`. Only the 2b session writes in this section.

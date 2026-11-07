@@ -9,12 +9,13 @@ import (
 
 // problemBody is the Problem Details object as a client reads it.
 type problemBody struct {
-	Type   string `json:"type"`
-	Title  string `json:"title"`
-	Status int    `json:"status"`
-	Detail string `json:"detail"`
-	Code   string `json:"code"`
-	Field  string `json:"field"`
+	Type     string `json:"type"`
+	Title    string `json:"title"`
+	Status   int    `json:"status"`
+	Detail   string `json:"detail"`
+	Code     string `json:"code"`
+	Field    string `json:"field"`
+	Position *int   `json:"position"`
 }
 
 // readProblem checks the headers of a Problem Details response and decodes its body strictly.
@@ -47,6 +48,8 @@ func TestWriteProblem(t *testing.T) {
 		{codeExponentNotInteger, http.StatusBadRequest, "Exponent not integer"},
 		{codeExponentOutOfRange, http.StatusBadRequest, "Exponent out of range"},
 		{codeInvalidOperator, http.StatusBadRequest, "Invalid operator"},
+		{codeInvalidExpression, http.StatusBadRequest, "Invalid expression"},
+		{codeExpressionTooComplex, http.StatusBadRequest, "Expression too complex"},
 		{codeDivisionByZero, http.StatusUnprocessableEntity, "Division by zero"},
 		{codeNegativeSquareRoot, http.StatusUnprocessableEntity, "Negative square root"},
 		{codeResultTooLarge, http.StatusUnprocessableEntity, "Result too large"},
