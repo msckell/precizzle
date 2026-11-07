@@ -91,7 +91,7 @@ export function HistoryPanel({
                     ) : (
                       "= "
                     )}
-                    {display.text}
+                    <span className="history-number">{display.text}</span>
                   </p>
                 </div>
                 <button
