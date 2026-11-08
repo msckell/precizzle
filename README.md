@@ -27,7 +27,7 @@ curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json
 
 ## Development
 
-Requirements: Go 1.27 and Node.js 24.15 or later with npm. Docker is needed only for the image.
+Requirements: Go 1.27.3 or later (an older Go toolchain downloads it automatically, as `backend/go.mod` asks) and Node.js 24.15 or a later 24.x release with npm. Docker is needed only for the image.
 
 Backend, from `backend/`:
 
