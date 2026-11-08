@@ -48,18 +48,18 @@ func TestNewHandler(t *testing.T) {
 		wantNoBody  bool
 		wantProblem bool
 	}{
-		{name: "no static dir: root is not found", method: "GET", path: "/", wantStatus: 404, wantProblem: true},
+		{name: "no static dir: root is not found", method: "GET", path: "/", wantStatus: 404, wantBody: `"code":"not_found"`, wantProblem: true},
 		{name: "no static dir: API works", method: "POST", path: "/api/v1/evaluate", body: `{"expression":"0.1+0.2"}`, wantStatus: 200, wantBody: `"value":"0.3"`},
 		{name: "root serves index.html", staticDir: dir, method: "GET", path: "/", wantStatus: 200, wantType: "text/html", wantBody: indexHTML},
 		{name: "HEAD root has no body", staticDir: dir, method: "HEAD", path: "/", wantStatus: 200, wantType: "text/html", wantNoBody: true},
 		{name: "asset is served", staticDir: dir, method: "GET", path: "/assets/app.js", wantStatus: 200, wantBody: script},
-		{name: "missing file is a plain 404", staticDir: dir, method: "GET", path: "/missing.js", wantStatus: 404, wantType: "text/plain"},
+		{name: "missing file is a plain 404", staticDir: dir, method: "GET", path: "/missing.js", wantStatus: 404, wantType: "text/plain", wantBody: "404 page not found"},
 		{name: "API evaluates", staticDir: dir, method: "POST", path: "/api/v1/evaluate", body: `{"expression":"0.1+0.2"}`, wantStatus: 200, wantType: "application/json", wantBody: `"value":"0.3"`},
 		{name: "health", staticDir: dir, method: "GET", path: "/healthz", wantStatus: 200, wantBody: `{"status":"ok"}`},
-		{name: "health rejects POST", staticDir: dir, method: "POST", path: "/healthz", wantStatus: 405, wantProblem: true},
-		{name: "API rejects GET", staticDir: dir, method: "GET", path: "/api/v1/add", wantStatus: 405, wantProblem: true},
-		{name: "unknown API path", staticDir: dir, method: "GET", path: "/api/v1/nope", wantStatus: 404, wantProblem: true},
-		{name: "POST outside the API", staticDir: dir, method: "POST", path: "/", wantStatus: 404, wantProblem: true},
+		{name: "health rejects POST", staticDir: dir, method: "POST", path: "/healthz", wantStatus: 405, wantBody: `"code":"method_not_allowed"`, wantProblem: true},
+		{name: "API rejects GET", staticDir: dir, method: "GET", path: "/api/v1/add", wantStatus: 405, wantBody: `"code":"method_not_allowed"`, wantProblem: true},
+		{name: "unknown API path", staticDir: dir, method: "GET", path: "/api/v1/nope", wantStatus: 404, wantBody: `"code":"not_found"`, wantProblem: true},
+		{name: "POST outside the API", staticDir: dir, method: "POST", path: "/", wantStatus: 404, wantBody: `"code":"not_found"`, wantProblem: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
