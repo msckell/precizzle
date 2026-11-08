@@ -2308,3 +2308,9 @@ The first run of the Backend, Frontend and Docker jobs passed. Under the owner's
 |---|---|---|
 | [The error cases of `TestNewHandler` have an empty `wantBody`](https://github.com/msckell/precizzle/pull/6#discussion_r4504698605), and `strings.Contains(body, "")` always passes, so their bodies are not checked | Valid. Changing an expected code made the test fail only once each case had its own expectation | Commit `7563366`: each Problem Details case checks its `code`, and the missing file checks `404 page not found` |
 | Additional comment, marked unverified: use `httptest.NewRequestWithContext` to satisfy the `noctx` linter | Not valid for this repository. The Go tooling is `gofmt` and `go vet` (CLAUDE.md), and neither has a `noctx` check. The other eight test requests in `backend/` use `httptest.NewRequest`, whose context is `context.Background()` | No change; explained in a PR comment |
+
+The review of `9190ece` raised one more finding:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [With `PRECIZZLE_STATIC_DIR` set, the outer mux redirects `/api` to `/api/`](https://github.com/msckell/precizzle/pull/6#discussion_r4504713603), because it registers only the subtree pattern, while the API alone answers `/api` with a Problem Details `404`. D88 keeps the API responses unchanged | Valid. A new test case, `POST /api`, got `307` instead of `404 not_found` | Commit `8baee19`: the outer mux also registers `/api`, and the test case passes |
