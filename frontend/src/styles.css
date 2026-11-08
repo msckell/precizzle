@@ -540,7 +540,7 @@ p {
 }
 .brand {
   margin-right: auto;
-  font-size: 23px;
+  font-size: 27px;
   font-weight: 800;
   letter-spacing: -0.01em;
 }
@@ -830,7 +830,7 @@ p {
   .brand {
     grid-column: 2;
     margin: 0 auto;
-    font-size: 19px;
+    font-size: 22px;
   }
   .history-button {
     grid-column: 1;
