@@ -2419,3 +2419,9 @@ The review of `d00e884` raised two more findings about the same requirements lin
 |---|---|---|
 | [“Node.js 24.15 or later” includes Node.js 25](https://github.com/msckell/precizzle/pull/7#discussion_r4505355597) | Valid. The `jsdom` range is `^22.22.2 \|\| ^24.15.0 \|\| >=26.0.0`, which excludes 25 | Node.js 24.15 or a later 24.x release |
 | In the review summary: the Go requirement should match `go.mod` | Valid. `backend/go.mod` says `go 1.27.3`, and a Go 1.21 or later toolchain downloads it automatically | Go 1.27.3 or later, noting the automatic download |
+
+The review of `4de8feb` raised one more finding:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [The automatic toolchain download needs Go 1.21 or later and a `GOTOOLCHAIN` that allows it](https://github.com/msckell/precizzle/pull/7#discussion_r4505363424) | Valid. Go 1.20 cannot switch toolchains, and `GOTOOLCHAIN=local` disables it | Commit `11812fc`: the note is removed, and the requirement is simply Go 1.27.3 or later |
