@@ -13,8 +13,16 @@ export function splitDecimal(decimal: string): {
 export function formatResult(result: Result, expansion: Expansion = 0) {
   const { mantissa, exponent } = splitDecimal(result.decimal);
   const [integer, fraction = ""] = mantissa.split(".");
-  const limits = [result.kind === "repeating" ? 4 : 5, 20, 40, 60, 80, 100];
-  const limit = expansion === 0 && fraction.length <= 5 ? 5 : limits[expansion];
+  // Below 1 the short view counts digits from the first non-zero one, so a tiny value never reads as 0.
+  const zeros = /^-?0$/.test(integer)
+    ? Math.max(fraction.search(/[1-9]/), 0)
+    : 0;
+  const first = (result.kind === "repeating" ? 4 : 5) + zeros;
+  const limits = [first, ...[20, 40, 60, 80, 100].filter((n) => n > first)];
+  const limit =
+    expansion === 0 && fraction.length <= 5 + zeros
+      ? fraction.length
+      : limits[expansion];
   const shownDecimals = Math.min(fraction.length, limit);
   const visible =
     integer + (shownDecimals ? "." + fraction.slice(0, shownDecimals) : "");
