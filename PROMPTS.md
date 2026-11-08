@@ -2425,3 +2425,74 @@ The review of `4de8feb` raised one more finding:
 | Finding | Verification | Final decision |
 |---|---|---|
 | [The automatic toolchain download needs Go 1.21 or later and a `GOTOOLCHAIN` that allows it](https://github.com/msckell/precizzle/pull/7#discussion_r4505363424) | Valid. Go 1.20 cannot switch toolchains, and `GOTOOLCHAIN=local` disables it | Commit `11812fc`: the note is removed, and the requirement is simply Go 1.27.3 or later |
+
+---
+
+## 7. Block 5: Product images
+
+Block plan: [docs/plans/block-5-screenshots.md](docs/plans/block-5-screenshots.md)
+
+### 7.1 Starting prompt
+
+> Que tal Claude, ¿cómo estás? Mirá, habíamos terminado ya el proyecto. Estoy haciendo un par de rondas ahora de pruebas. Y necesito que hicieras tests y escribir prompts. Es decir, requiero que saltees los tests y todo. Porque en realidad solo lo que quiero preguntarte, ¿estas imágenes que habíamos generado de producto, viste? Tipo las del mockup del producto y todo. ¿Se pueden utilizar solo para saber como imágenes del producto ahora para subirlas al repositorio de GitHub? Ahora igual estoy haciendo un par de cambios, pero bueno, una vez que termine eso, ¿se pueden crear ese tipo de imágenes utilizando la calculadora para eso? Para subirlas
+
+English translation:
+
+> Hi Claude, how are you? Look, we had already finished the project. I'm now doing a couple of rounds of testing. And I need you to have done tests and to write prompts. That is, I need you to skip the tests and all that. Because really I only want to ask you: these product images we had generated, you know? Like the product mockups and all. Can they be used just as product images now, to upload them to the GitHub repository? I'm still making a couple of changes anyway, but once I finish that, can those kinds of images be created using the calculator for that? To upload them
+
+The assistant answered that the old design mockups do not match the final app, and proposed real captures of the running app instead.
+
+### 7.2 Key prompts
+
+> Claro, pero en realidad necesito imágenes de mockup, o sea, necesito imágenes buenas que muestren cálculos quizás complejos. No sé, o sea, necesito que planifiques las imágenes o qué tipo de tomas vas a sacar y en base a eso proceder, ¿ok? Dejalo acá pendiente, pero necesito que pienses en extensión, como te digo, qué imágenes de capturas pueden interpretar muy bien, pueden demostrar que es un muy buen producto
+
+English translation:
+
+> Sure, but actually I need mockup images, I mean, I need good images that show maybe complex calculations. I don't know, I mean, I need you to plan the images or what kind of shots you're going to take and proceed based on that, OK? Leave it pending here, but I need you to think broadly, as I say, about which capture images can come across really well, can show that it's a really good product
+
+**Status:** The images are real captures inside a browser or phone frame, so the "mockup" is only the frame (D94).
+
+> Pasa que eso es todo tipo de cuentas, ¿entendés? Y está muy bien, pero yo lo que quiero además, o sea, en realidad quiero menos de estas de lo que vos me mencionaste. Porque acordate que es una calculadora. Entonces necesito simplemente algunos casos, no sé, ponele uno complejo, uno medio, uno más simple, pero no los llames así, ¿viste? Quiero que sean tres casos así que ilustren eso. Luego que muestre la funcionalidad como el tema de los tres puntitos que extienden el resultado. Luego que muestren el historial y que podemos poner como cargar una cuenta entera o usar el número del resultado de una cuenta y que el historial es hasta 100, ¿entendés? Cosas más que hagan una muestra del producto de forma integral, no solo de las cuentas, ¿entendés? A eso tenés que enfocarte
+
+English translation:
+
+> The thing is, that's all kinds of calculations, you know? And it's very good, but what I also want, I mean, actually I want fewer of these than what you mentioned. Because remember it's a calculator. So I simply need a few cases, I don't know, say a complex one, a medium one, a simpler one, but don't call them that, you know? I want three cases like that to illustrate it. Then it should show the functionality like the three dots that expand the result. Then they should show the history and that we can, say, load a whole calculation or use the number from a calculation's result, and that the history holds up to 100, you know? Things that showcase the product as a whole, not just the calculations, you know? That's what you have to focus on
+
+> La opción C no me gusta, no. Reemplazala y cambiala y pone otro cálculo. Esto tenés libertad de decisión en lo que vos quieras Luego el título de los nombres, del nombre de las cosas. Eso en Like a Pocket Calculator no me gusta. Tenés que poner simplemente describir qué es lo que se ve en imagen y nada más
+
+English translation:
+
+> I don't like option C, no. Replace it and change it and put in another calculation. On this you're free to decide whatever you want. Then the title of the names, of the name of things. That "Like a Pocket Calculator" thing, I don't like it. You simply have to describe what is seen in the image and nothing else
+
+**Status:** The third calculation became 10 × √2, and every caption only describes what its image shows (D94).
+
+> El gif me gusto la verdad me gusta bastante eso. Lo podés hacer vos automático?
+
+English translation:
+
+> I liked the GIF, honestly I like that quite a lot. Can you make it automatically?
+
+> Bueno, listo, ya tenés la última versión, así que listo. Ya terminé los cambios, así que si podés arrancar, buenísimo Primero realiza un plan, primero necesito que hagas un plan para que planifiques exactamente qué fotos sacar, qué ejecutar, todo eso. Y en donde lo vas a subir, cómo lo vas a subir. O sea, haz un plan integral, fíjate todo lo que vas a hacer y luego ejecutá.
+
+English translation:
+
+> OK, done, you have the latest version now, so that's it. I've finished the changes, so if you can start, great. First make a plan, first I need you to make a plan so you plan exactly which pictures to take, what to run, all that. And where you're going to upload it, how you're going to upload it. I mean, make a comprehensive plan, look at everything you're going to do, and then execute.
+
+**Status:** The owner approved the plan: [docs/plans/block-5-screenshots.md](docs/plans/block-5-screenshots.md).
+
+> Bueno, me encantaron los GIFs, el único cambio que haría es en uno de los GIFs que mostrás el historial, ¿viste? En un momento cliqueás sobre que podés cargar un resultado, ¿viste? Load y lo cargás. Entonces me gustaría que hagas load, cargues el resultado y escribas una parte como para que demuestre que podés cargar un resultado, tipo la cuenta, perdón, la cuenta total y escribir y meterle otro resultado, y meterle otros números y que nada, ponele, no sé, sumás cinco al cuadrado y bueno, te da el resultado. Y luego ponés historial, vas a otro lugar, a otro número y en vez de hacer load, usás use y ahí creás una cuenta nueva con el resultado de otro projection, ¿entendés? Entonces ahí mostrás todo eso
+
+English translation:
+
+> Well, I loved the GIFs. The only change I'd make is in one of the GIFs, the one where you show the history, you know? At one point you click to load a result, you know? Load, and you load it. So I'd like you to do Load, load the result and type something to show that you can load a result, I mean the calculation, sorry, the whole calculation, and type into it and add another result, add other numbers, and, say, I don't know, you add five squared and it gives you the result. And then you open the history, go to another place, to another number, and instead of Load you use Use, and there you create a new calculation with the result of another one, you know? That way you show all of that
+
+**Status:** This replaces the history flow of the plan. The GIF now loads the loan formula, adds + 5² and evaluates it, then uses the 1361.25 result in a new calculation, 1361.25 ÷ 12.
+
+### 7.3 Execution
+
+The owner approved the image checkpoint with a short confirmation, so that message is not logged.
+
+- Milestone 1, capture and compose: the app ran from the Docker image, and every expected result was first checked with `curl` against `evaluate`. A throwaway Playwright script typed each calculation with the keyboard in the installed Chrome, and a DevTools screencast recorded the two animated flows. A throwaway HTML template drew the browser and phone frames, and ffmpeg built the GIFs with a palette per animation. The scripts stayed in the session scratchpad.
+- Every number in the images comes from the API: `1199.1010…` for the loan payment, `1361.25` for the price, `≈ 14.14213…` for 10 × √2, 100 decimals of 1 ÷ 7, `1224.1010…` after adding 5², and `113.4375` for 1361.25 ÷ 12.
+- After "Use", the focus stays on the History button, so Enter presses that button (D77). The history GIF clicks the `=` key instead, as a user would.
+- Milestone 2, records: the seven files in `docs/images/` (`*.gif` marked as binary in `.gitattributes`), the "A quick tour" section and the banner in the README, D94 in the SPEC, and this section.
