@@ -48,7 +48,7 @@ Expressions combine these operations with parentheses and the usual precedence (
 - The part being edited has a purple box that follows the cursor. Operators sit in soft circles, result chips are mint, or orange with ≈ when approximate, and the empty slots of a structure are dashed. The operator keys form two rows, `+ − × ÷` and `( ) xʸ √ %`. On desktop the history takes the keypad column; on mobile it fills the screen (D71). The brand, the decorations and the `=` key follow D72.
 - ÷ and xʸ take the operand right before the cursor as numerator or base, and √ inserts an empty root (D74). Backspace or Delete next to a structure first selects all of it, and a second press deletes it (D75).
 - Right after a result, an operator chains it and a digit starts a new expression. Placing or moving the cursor edits the evaluated expression and dims the result (D76).
-- The physical keyboard works anywhere on the page, except while the history is open, when only Escape works and closes it (D77):
+- The physical keyboard works anywhere on the page, except while the history is open: then the calculator keys are off, Escape closes the history, and Tab, Enter and Space work on its buttons as usual (D77):
 
   | Key | Action |
   |---|---|

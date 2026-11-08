@@ -16,7 +16,7 @@ docker build -t precizzle .
 docker run --rm -d -p 127.0.0.1:8080:8080 --name precizzle precizzle
 ```
 
-Open http://127.0.0.1:8080 for the calculator, or call the API:
+Open http://127.0.0.1:8080 for the calculator, or call the API with `curl` in a POSIX shell such as Git Bash:
 
 ```sh
 curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "0.1+0.2"}'
@@ -27,7 +27,7 @@ curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json
 
 ## Development
 
-Requirements: Go 1.27 and Node.js 24 with npm. Docker is needed only for the image.
+Requirements: Go 1.27 and Node.js 24.15 or later with npm. Docker is needed only for the image.
 
 Backend, from `backend/`:
 
