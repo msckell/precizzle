@@ -2113,3 +2113,204 @@ English translation:
 > Keep the current scope of the frontend and avoid changes not justified by real problems. Prioritize the stability, consistency and quality of the existing code.
 
 The accepted copy-race thread was marked resolved, and the pending `PROMPTS.md` records were pushed together, so CodeRabbit reviews the final head once.
+
+---
+
+## 5. Block 3: Docker
+
+### 5.1 Starting prompt
+
+Block plan: [docs/plans/block-3-docker.md](docs/plans/block-3-docker.md)
+
+Written in English:
+
+> I’m continuing Precizzle after completing and merging Block 2.
+>
+> The previous development session is finished, and I’m starting with a fresh context.
+>
+> My working directory is C:\Projects\precizzle, on main.
+>
+> The latest completed merge is PR #5, commit bebd62c. Both the frontend and backend are integrated into main.
+>
+> I want to complete the remaining work: Block 3 (Docker) and Block 4 (Final Documentation).
+>
+> First, recover the project context by reading:
+>
+> * AGENTS.md
+> * CLAUDE.md
+> * docs/prompts/00-master-prompt.md
+> * docs/SPEC.md
+> * The relevant plans in docs/plans/
+> * PROMPTS.md
+> * The recent Git history.
+>
+> Verify the actual repository status before making changes.
+>
+> The latest reported verification included 408 passing frontend tests, 99.01% statement coverage, a successful backend test suite, 70 API fixtures matching the real backend, and passing CI on main.
+>
+> The application itself is complete. I do not want to expand its functionality or revisit approved design decisions.
+>
+> There is one pending documentation item: the merge record for PR #5 must be added to PROMPTS.md §4.5 during Block 4, including my authorization, merge commit bebd62c, and the final verification results.
+>
+> For Block 3, follow the existing project workflow and prepare a concise implementation plan for Docker. Create a dedicated feature branch rather than implementing directly on main.
+>
+> Once I approve the plan, implement Docker, verify that the complete application runs correctly, and follow the established testing, review, and PR checkpoints.
+>
+> After Block 3 is integrated, proceed with Block 4 to complete and verify the documentation, record the pending merge, and confirm that the repository satisfies the original project requirements.
+>
+> Keep the work focused and avoid unnecessary complexity.
+>
+> Do not push, open pull requests, merge branches, or delete existing worktrees without my explicit authorization.
+>
+> Start by giving me a concise summary of the remaining work and the proposed Block 3 plan. Do not reopen decisions that are already documented and approved.
+
+### 5.2 Interview
+
+Before the questions, the assistant checked that the candidate base image tags exist (`golang:1.27.3-alpine`, `node:24.15-alpine`, `alpine:3.23` and `gcr.io/distroless/static-debian13:nonroot`).
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| How do the frontend and the backend run together? | Single image: the Go server also serves the frontend build | D88 |
+| Which base image does the final stage use? | `alpine:3.23` | D89, D90 |
+| What does the `docker` CI job do? | Build and smoke test | D91 |
+
+**Status:** The owner approved the plan that contains these decisions: [docs/plans/block-3-docker.md](docs/plans/block-3-docker.md).
+
+### 5.3 Execution
+
+**Milestone 1 approval.** Original (Spanish):
+
+> Perfecto, apruebo el Hito 1 y autorizo continuar con el Hito 2.
+>
+> Respecto a los dos puntos pendientes:
+>
+> 1. Verificá que el proceso PID 1408 corresponda efectivamente al backend antiguo de Precizzle. Si lo confirmás y no está siendo utilizado por otra sesión, podés cerrarlo para liberar el puerto 8080. No cierres procesos que no puedas identificar con seguridad.
+> 2. Estoy de acuerdo con trasladar la revisión visual al Hito 2. Prefiero que comprobemos la interfaz directamente desde el contenedor Docker, junto con la comunicación con la API real.
+>
+> Continuá con el Dockerfile multistage y .dockerignore según el plan aprobado.
+>
+> Verificá el build, la ejecución sin root, el HEALTHCHECK, las rutas de la API, el frontend y el funcionamiento en el navegador.
+>
+> Mantené el alcance definido y las pruebas habituales. No agregues funcionalidades nuevas.
+>
+> Cuando completes el Hito 2, guardá los cambios en commits locales y detenete en el checkpoint para revisar los resultados.
+>
+> No hagas push, abras PRs ni mergees sin mi autorización.
+
+English translation:
+
+> Perfect, I approve Milestone 1 and authorize continuing with Milestone 2.
+>
+> About the two pending points:
+>
+> 1. Verify that process PID 1408 really is the old Precizzle backend. If you confirm it and no other session is using it, you can close it to free port 8080. Do not close processes you cannot identify with certainty.
+> 2. I agree with moving the visual review to Milestone 2. I prefer that we check the interface directly from the Docker container, together with the communication with the real API.
+>
+> Continue with the multi-stage Dockerfile and .dockerignore according to the approved plan.
+>
+> Verify the build, running without root, the HEALTHCHECK, the API routes, the frontend and how it works in the browser.
+>
+> Keep the defined scope and the usual tests. Do not add new features.
+>
+> When you complete Milestone 2, save the changes in local commits and stop at the checkpoint to review the results.
+>
+> Do not push, open PRs or merge without my authorization.
+
+The process was a leftover `go run .` of the backend from an earlier session, whose shell no longer existed, so it was closed. The browser check ran against the container in headless Chrome: `0.1+0.2`, `200+15%` and `1/7` returned their results, the bundled font loaded and every request went to `127.0.0.1:8080`.
+
+**Milestone 2 approval and CLAUDE.md.** Original (Spanish):
+
+> Perfecto, apruebo el Hito 2 y autorizo comenzar el Hito 3.
+>
+> Respecto a CLAUDE.md y AGENTS.md, prefiero la primera alternativa: reemplazar la sección obsoleta “Block 2: parallel work” por las instrucciones y comandos actuales de Docker.
+>
+> Quiero que ambos archivos sigan siendo idénticos y respeten el límite de 80 líneas. Conservá las reglas generales de calidad, revisión y aprobaciones que sigan vigentes. El historial del trabajo paralelo ya está documentado en PROMPTS.md y Git.
+>
+> Continuá con el Hito 3 según el plan aprobado: agregar el job Docker al CI, documentar cómo construir y ejecutar la imagen en el README y completar el registro del Bloque 3 en PROMPTS.md.
+>
+> Ejecutá las verificaciones correspondientes y confirmá que los cambios de documentación reflejen el funcionamiento real del contenedor.
+>
+> Mantené el alcance actual, sin incorporar nuevas funcionalidades.
+>
+> Cuando termines, guardá todo en commits locales y detenete en el checkpoint para revisar los resultados.
+>
+> No hagas push, abras PRs ni mergees sin mi autorización.
+
+English translation:
+
+> Perfect, I approve Milestone 2 and authorize starting Milestone 3.
+>
+> About CLAUDE.md and AGENTS.md, I prefer the first alternative: replace the obsolete "Block 2: parallel work" section with the current Docker instructions and commands.
+>
+> I want both files to stay identical and respect the 80-line limit. Keep the general quality, review and approval rules that still apply. The history of the parallel work is already documented in PROMPTS.md and Git.
+>
+> Continue with Milestone 3 according to the approved plan: add the Docker job to CI, document how to build and run the image in the README and complete the Block 3 record in PROMPTS.md.
+>
+> Run the corresponding checks and confirm that the documentation changes reflect how the container really works.
+>
+> Keep the current scope, without adding new features.
+>
+> When you finish, save everything in local commits and stop at the checkpoint to review the results.
+>
+> Do not push, open PRs or merge without my authorization.
+
+### 5.4 Pull request and review
+
+**Opening the pull request.** Original (Spanish):
+
+> Perfecto, apruebo el Hito 3 y autorizo el push de chore/docker y la apertura del Pull Request.
+>
+> Me parece bien la descripción propuesta, incluyendo Summary, Motivation, Testing, Decisions y Out of scope.
+>
+> Para el título, prefiero:
+>
+> build: run Precizzle frontend and backend in one Docker image
+>
+> Después de abrir el PR:
+>
+> 1. Verificá que los jobs Backend, Frontend y Docker se ejecuten correctamente en GitHub Actions.
+> 2. SeguÍ el protocolo habitual de CodeRabbit.
+> 3. Revisá todas las observaciones, incluyendo nitpicks, y distinguí los problemas reales de las sugerencias opcionales.
+> 4. Resolvé de forma autónoma los ajustes menores, documentando las decisiones. Consultame únicamente si aparece un problema importante de arquitectura, seguridad o comportamiento.
+> 5. Evitá cambios innecesarios que amplíen el alcance del proyecto.
+>
+> Cuando el PR esté aprobado, todos los checks estén en verde y no queden observaciones bloqueantes, presentame el estado final para autorizar el merge.
+>
+> No hagas merge sin mi autorización.
+
+English translation:
+
+> Perfect, I approve Milestone 3 and authorize pushing chore/docker and opening the Pull Request.
+>
+> The proposed description is fine, including Summary, Motivation, Testing, Decisions and Out of scope.
+>
+> For the title, I prefer:
+>
+> build: run Precizzle frontend and backend in one Docker image
+>
+> After opening the PR:
+>
+> 1. Verify that the Backend, Frontend and Docker jobs run correctly in GitHub Actions.
+> 2. Follow the usual CodeRabbit protocol.
+> 3. Review every observation, nitpicks included, and tell real problems apart from optional suggestions.
+> 4. Resolve minor adjustments on your own, documenting the decisions. Ask me only if an important architecture, security or behavior problem appears.
+> 5. Avoid unnecessary changes that widen the scope of the project.
+>
+> When the PR is approved, every check is green and no blocking observations remain, present the final state to me so I can authorize the merge.
+>
+> Do not merge without my authorization.
+
+#### CodeRabbit triage ([PR #6](https://github.com/msckell/precizzle/pull/6))
+
+The first run of the Backend, Frontend and Docker jobs passed. Under the owner's instruction to resolve minor findings autonomously, the assistant verified and decided both findings:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [The error cases of `TestNewHandler` have an empty `wantBody`](https://github.com/msckell/precizzle/pull/6#discussion_r4504698605), and `strings.Contains(body, "")` always passes, so their bodies are not checked | Valid. Changing an expected code made the test fail only once each case had its own expectation | Commit `7563366`: each Problem Details case checks its `code`, and the missing file checks `404 page not found` |
+| Additional comment, marked unverified: use `httptest.NewRequestWithContext` to satisfy the `noctx` linter | Not valid for this repository. The Go tooling is `gofmt` and `go vet` (CLAUDE.md), and neither has a `noctx` check. The other eight test requests in `backend/` use `httptest.NewRequest`, whose context is `context.Background()` | No change; explained in a PR comment |
+
+The review of `9190ece` raised one more finding:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [With `PRECIZZLE_STATIC_DIR` set, the outer mux redirects `/api` to `/api/`](https://github.com/msckell/precizzle/pull/6#discussion_r4504713603), because it registers only the subtree pattern, while the API alone answers `/api` with a Problem Details `404`. D88 keeps the API responses unchanged | Valid. A new test case, `POST /api`, got `307` instead of `404 not_found` | Commit `8baee19`: the outer mux also registers `/api`, and the test case passes |
