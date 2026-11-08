@@ -2434,16 +2434,6 @@ Block plan: [docs/plans/block-5-screenshots.md](docs/plans/block-5-screenshots.m
 
 ### 7.1 Starting prompt
 
-> Que tal Claude, ¿cómo estás? Mirá, habíamos terminado ya el proyecto. Estoy haciendo un par de rondas ahora de pruebas. Y necesito que hicieras tests y escribir prompts. Es decir, requiero que saltees los tests y todo. Porque en realidad solo lo que quiero preguntarte, ¿estas imágenes que habíamos generado de producto, viste? Tipo las del mockup del producto y todo. ¿Se pueden utilizar solo para saber como imágenes del producto ahora para subirlas al repositorio de GitHub? Ahora igual estoy haciendo un par de cambios, pero bueno, una vez que termine eso, ¿se pueden crear ese tipo de imágenes utilizando la calculadora para eso? Para subirlas
-
-English translation:
-
-> Hi Claude, how are you? Look, we had already finished the project. I'm now doing a couple of rounds of testing. And I need you to have done tests and to write prompts. That is, I need you to skip the tests and all that. Because really I only want to ask you: these product images we had generated, you know? Like the product mockups and all. Can they be used just as product images now, to upload them to the GitHub repository? I'm still making a couple of changes anyway, but once I finish that, can those kinds of images be created using the calculator for that? To upload them
-
-The assistant answered that the old design mockups do not match the final app, and proposed real captures of the running app instead.
-
-### 7.2 Key prompts
-
 > Claro, pero en realidad necesito imágenes de mockup, o sea, necesito imágenes buenas que muestren cálculos quizás complejos. No sé, o sea, necesito que planifiques las imágenes o qué tipo de tomas vas a sacar y en base a eso proceder, ¿ok? Dejalo acá pendiente, pero necesito que pienses en extensión, como te digo, qué imágenes de capturas pueden interpretar muy bien, pueden demostrar que es un muy buen producto
 
 English translation:
@@ -2451,6 +2441,8 @@ English translation:
 > Sure, but actually I need mockup images, I mean, I need good images that show maybe complex calculations. I don't know, I mean, I need you to plan the images or what kind of shots you're going to take and proceed based on that, OK? Leave it pending here, but I need you to think broadly, as I say, about which capture images can come across really well, can show that it's a really good product
 
 **Status:** The images are real captures inside a browser or phone frame, so the "mockup" is only the frame (D94).
+
+### 7.2 Key prompts
 
 > Pasa que eso es todo tipo de cuentas, ¿entendés? Y está muy bien, pero yo lo que quiero además, o sea, en realidad quiero menos de estas de lo que vos me mencionaste. Porque acordate que es una calculadora. Entonces necesito simplemente algunos casos, no sé, ponele uno complejo, uno medio, uno más simple, pero no los llames así, ¿viste? Quiero que sean tres casos así que ilustren eso. Luego que muestre la funcionalidad como el tema de los tres puntitos que extienden el resultado. Luego que muestren el historial y que podemos poner como cargar una cuenta entera o usar el número del resultado de una cuenta y que el historial es hasta 100, ¿entendés? Cosas más que hagan una muestra del producto de forma integral, no solo de las cuentas, ¿entendés? A eso tenés que enfocarte
 
