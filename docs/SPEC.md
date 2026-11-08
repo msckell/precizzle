@@ -629,6 +629,12 @@ The owner approved this limited exception after real API verification showed tha
 | D92 | The coverage report has two parts: a summary table in the README and the existing CI output. The table lists each Go package and the frontend statements, with the CI minimum for each. The CI output is the backend job's coverage table in its step summary and the frontend's Vitest text report. No new tooling or artifacts. | The owner chose a summary in the README plus CI over a CI artifact: a reader sees the numbers without downloading anything, and CI already prints them on every run. |
 | D93 | The README keeps its sections. A short "Quick start" (Docker first, then the tests) replaces "Status", and outdated lines are fixed. | The owner wants a new reader to run the app in minutes without rewriting sections that were already reviewed. |
 
+### Block 5: Product images
+
+| # | Decision | Reason |
+|---|---|---|
+| D94 | The README shows real captures of the app, running from the Docker image, inside a browser or phone frame on a background in the brand colors (D72): five PNG images and two GIFs in `docs/images/`. Each caption describes only what its image shows, and it lives in the README, not inside the image. The capture and compose scripts are throwaway tools and are not committed; the [Block 5 plan](plans/block-5-screenshots.md) records how the images were made. | The owner wants images that show the whole product: calculations, the expansion of a result and the history. Real captures show only what the app does, so they never drift into promises. Captions in the README stay readable, searchable and easy to change. |
+
 ## Out of scope
 
 - User accounts and authentication.
