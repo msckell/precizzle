@@ -48,7 +48,7 @@ Expressions combine these operations with parentheses and the usual precedence (
 - The part being edited has a purple box that follows the cursor. Operators sit in soft circles, result chips are mint, or orange with ≈ when approximate, and the empty slots of a structure are dashed. The operator keys form two rows, `+ − × ÷` and `( ) xʸ √ %`. On desktop the history takes the keypad column; on mobile it fills the screen (D71). The brand, the decorations and the `=` key follow D72.
 - ÷ and xʸ take the operand right before the cursor as numerator or base, and √ inserts an empty root (D74). Backspace or Delete next to a structure first selects all of it, and a second press deletes it (D75).
 - Right after a result, an operator chains it and a digit starts a new expression. Placing or moving the cursor edits the evaluated expression and dims the result (D76).
-- The physical keyboard works anywhere on the page, except while the history is open (D77):
+- The physical keyboard works anywhere on the page, except while the history is open, when only Escape works and closes it (D77):
 
   | Key | Action |
   |---|---|
@@ -60,7 +60,7 @@ Expressions combine these operations with parentheses and the usual precedence (
   | Enter, `=` | Evaluate |
   | Backspace, Delete | Delete before or after the cursor |
   | Arrow keys, Home, End | Move the cursor; Up and Down move between numerator and denominator, and into and out of an exponent |
-  | Escape | Clear the expression |
+  | Escape | Clear the expression, or close the history |
 
 - A long expression stays on one line and scrolls sideways, keeping the cursor visible (D79).
 - Every key has an accessible name, focus is visible, and results and errors are announced to screen readers (D78).
@@ -621,6 +621,13 @@ The owner approved this limited exception after real API verification showed tha
 | D89 | The Dockerfile is a multi-stage build: `node:24.15-alpine` builds the frontend, `golang:1.27.3-alpine` builds a static binary (`CGO_ENABLED=0`), and the final stage is `alpine:3.23` with only the binary and the frontend build. It runs as a non-root user. Inside the container `PRECIZZLE_ADDR` is `:8080`, and the documented command publishes the port only on the host loopback, `-p 127.0.0.1:8080:8080`. | The final image holds no build tools. The container needs every interface to receive the published port, and publishing it on the loopback keeps the app off the network, as D27 wants for development. |
 | D90 | A Dockerfile `HEALTHCHECK` calls `GET /healthz` (D32) with the busybox `wget` that `alpine` includes. | The owner chose `alpine` over a distroless image, which has no shell or `wget`, so its health check would need extra code in the binary. |
 | D91 | A `docker` CI job builds the image, starts it, waits until Docker reports it healthy, checks that `0.1+0.2` returns `0.3` through `evaluate`, and checks that `/` serves the app's HTML. | The owner chose a smoke test over a build only: it proves that the documented image starts and serves both layers. |
+
+### Block 4: Documentation
+
+| # | Decision | Reason |
+|---|---|---|
+| D92 | The coverage report has two parts: a summary table in the README and the existing CI output. The table lists each Go package and the frontend statements, with the CI minimum for each. The CI output is the backend job's coverage table in its step summary and the frontend's Vitest text report. No new tooling or artifacts. | The owner chose a summary in the README plus CI over a CI artifact: a reader sees the numbers without downloading anything, and CI already prints them on every run. |
+| D93 | The README keeps its sections. A short "Quick start" (Docker first, then the tests) replaces "Status", and outdated lines are fixed. | The owner wants a new reader to run the app in minutes without rewriting sections that were already reviewed. |
 
 ## Out of scope
 
