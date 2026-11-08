@@ -2398,3 +2398,17 @@ The owner approved each milestone checkpoint with a short confirmation, so those
 - Milestone 1, README: a "Quick start" replaced "Status", a "Tests and coverage" table took its numbers from `go test -cover` and `npm run coverage`, and outdated lines were fixed. Every command in the README was run as written, including the Docker image and the development proxy, and every relative link was checked.
 - Milestone 2, SPEC review: every example in sections 3 and 5 is a backend test case, every error code has a backend test and a frontend message, and the limit constants match the SPEC. The only mismatch was wording: Escape also closes the history, which section 1 now says. D92 and D93 were added.
 - Milestone 3, this log: the PR #5 and PR #6 merge records and this section.
+
+### 6.4 Pull request and review
+
+The owner authorized the push and the pull request with a short confirmation.
+
+#### CodeRabbit triage ([PR #7](https://github.com/msckell/precizzle/pull/7))
+
+The Backend, Frontend and Docker jobs passed. CodeRabbit requested changes with three minor findings, all verified and fixed in commit `d926051`:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [SPEC section 1 says only Escape works while the history is open](https://github.com/msckell/precizzle/pull/7#discussion_r4505340056), but Tab, Enter and Space still work on its buttons | Valid. `useKeyboard.ts` returns early for every key while the history is open, without calling `preventDefault`, so the browser handles them | The SPEC says the calculator keys are off, Escape closes the history, and Tab, Enter and Space work on its buttons |
+| [The Quick start `curl` example does not name its shell](https://github.com/msckell/precizzle/pull/7#discussion_r4505340057); in Windows PowerShell 5.1, `curl` is an alias for `Invoke-WebRequest` | Valid. The Examples section already says the examples use a POSIX shell | The Quick start names a POSIX shell such as Git Bash |
+| [The requirements say Node.js 24](https://github.com/msckell/precizzle/pull/7#discussion_r4505340058), but the locked `jsdom` needs 24.15 or later | Valid. `jsdom` and `w3c-xmlserializer` require `^24.15.0` in the 24 line in `package-lock.json` | The requirements say Node.js 24.15 or later |
