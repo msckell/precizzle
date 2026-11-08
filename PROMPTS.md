@@ -2114,6 +2114,50 @@ English translation:
 
 The accepted copy-race thread was marked resolved, and the pending `PROMPTS.md` records were pushed together, so CodeRabbit reviews the final head once.
 
+##### Merge
+
+Original (Spanish):
+
+> Perfecto, autorizo el merge del PR #5 utilizando un merge commit, sin squash ni rebase.
+>
+> Antes de ejecutarlo, verificá que la aprobación de CodeRabbit siga vigente sobre la versión actual y que todos los checks continúen en verde.
+>
+> Después del merge:
+>
+> 1. Actualizá main en C:\Projects\precizzle y verificá que esté sincronizada con origin/main.
+> 2. Confirmá que el frontend y el backend hayan quedado correctamente integrados.
+> 3. Conservá por ahora feat/frontend y su worktree. No borres ramas ni directorios.
+> 4. Dejá identificado el registro pendiente del merge en PROMPTS.md para incorporarlo durante el bloque de documentación final, sin abrir otro PR exclusivamente para eso.
+>
+> Cuando termines, dame un resumen breve con el commit de merge, el estado de main y cualquier cuestión pendiente.
+>
+> No introduzcas nuevas funcionalidades ni modificaciones fuera de este cierre.
+
+English translation:
+
+> Perfect, I authorize merging PR #5 with a merge commit, without squash or rebase.
+>
+> Before running it, verify that the CodeRabbit approval still applies to the current version and that all checks are still green.
+>
+> After the merge:
+>
+> 1. Update main in C:\Projects\precizzle and verify that it is in sync with origin/main.
+> 2. Confirm that the frontend and the backend were integrated correctly.
+> 3. Keep feat/frontend and its worktree for now. Do not delete branches or directories.
+> 4. Leave the pending merge record in PROMPTS.md identified, to add it during the final documentation block, without opening another PR just for that.
+>
+> When you finish, give me a short summary with the merge commit, the state of main and any pending issue.
+>
+> Do not introduce new features or changes outside this closing.
+
+CodeRabbit's approval still applied to head `0c29bbd` and the Backend, Frontend and CodeRabbit checks were green, so PR #5 was merged with merge commit `bebd62c`. After the merge:
+
+- `main` in `C:\Projects\precizzle` was fast-forwarded to `bebd62c` and matched `origin/main`.
+- On `main`, the backend `gofmt`, `go vet` and tests passed, and so did the frontend lint, format check, typecheck, coverage (408 tests, 99.01% of statements) and build.
+- All 70 frontend fixtures matched the responses of the backend on `main`.
+- CI on `main` passed.
+- `feat/frontend` and its worktree were kept, as asked. This record was added in Block 4 ([section 6](#6-block-4-documentation-and-wrap-up)).
+
 ---
 
 ## 5. Block 3: Docker
@@ -2314,3 +2358,70 @@ The review of `9190ece` raised one more finding:
 | Finding | Verification | Final decision |
 |---|---|---|
 | [With `PRECIZZLE_STATIC_DIR` set, the outer mux redirects `/api` to `/api/`](https://github.com/msckell/precizzle/pull/6#discussion_r4504713603), because it registers only the subtree pattern, while the API alone answers `/api` with a Problem Details `404`. D88 keeps the API responses unchanged | Valid. A new test case, `POST /api`, got `307` instead of `404 not_found` | Commit `8baee19`: the outer mux also registers `/api`, and the test case passes |
+
+#### Merge
+
+Original (Spanish):
+
+> Autorizo
+
+English translation:
+
+> I authorize it.
+
+The authorization answered the final state of the PR, which asked to merge it with a merge commit and delete `chore/docker`. CodeRabbit had approved head `396b6cb`, both review threads were resolved, and the Backend, Frontend, Docker and CodeRabbit checks were green. PR #6 was merged with merge commit `3cfe823`. `main` was fast-forwarded to it, `chore/docker` was deleted locally and on origin, and CI on `main` passed.
+
+---
+
+## 6. Block 4: Documentation and wrap-up
+
+### 6.1 Starting prompt
+
+Block plan: [docs/plans/block-4-docs.md](docs/plans/block-4-docs.md)
+
+Block 4 continued the session that Block 3 started, so its starting prompt is the one in [section 5.1](#51-starting-prompt): after Block 3, complete and verify the documentation, record the pending PR #5 merge and confirm that the repository meets the original requirements.
+
+### 6.2 Interview
+
+| Question | Selected answer | Final decision |
+|---|---|---|
+| Where does the coverage report live? | A summary table in the README plus the existing CI output | D92 |
+| How is the README organized? | A "Quick start" at the top, keeping the current sections | D93 |
+| What happens to the merged Block 2 branches and worktrees? | Delete `feat/expression-api`, `feat/frontend` and their worktrees after the Block 4 merge | Repository housekeeping, not a SPEC decision |
+
+**Status:** The owner approved the plan that contains these decisions: [docs/plans/block-4-docs.md](docs/plans/block-4-docs.md).
+
+### 6.3 Execution
+
+The owner approved each milestone checkpoint with a short confirmation, so those messages are not logged.
+
+- Milestone 1, README: a "Quick start" replaced "Status", a "Tests and coverage" table took its numbers from `go test -cover` and `npm run coverage`, and outdated lines were fixed. Every command in the README was run as written, including the Docker image and the development proxy, and every relative link was checked.
+- Milestone 2, SPEC review: every example in sections 3 and 5 is a backend test case, every error code has a backend test and a frontend message, and the limit constants match the SPEC. The only mismatch was wording: Escape also closes the history, which section 1 now says. D92 and D93 were added.
+- Milestone 3, this log: the PR #5 and PR #6 merge records and this section.
+
+### 6.4 Pull request and review
+
+The owner authorized the push and the pull request with a short confirmation.
+
+#### CodeRabbit triage ([PR #7](https://github.com/msckell/precizzle/pull/7))
+
+The Backend, Frontend and Docker jobs passed. CodeRabbit requested changes with three minor findings, all verified and fixed in commit `d926051`:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [SPEC section 1 says only Escape works while the history is open](https://github.com/msckell/precizzle/pull/7#discussion_r4505340056), but Tab, Enter and Space still work on its buttons | Valid. `useKeyboard.ts` returns early for every key while the history is open, without calling `preventDefault`, so the browser handles them | The SPEC says the calculator keys are off, Escape closes the history, and Tab, Enter and Space work on its buttons |
+| [The Quick start `curl` example does not name its shell](https://github.com/msckell/precizzle/pull/7#discussion_r4505340057); in Windows PowerShell 5.1, `curl` is an alias for `Invoke-WebRequest` | Valid. The Examples section already says the examples use a POSIX shell | The Quick start names a POSIX shell such as Git Bash |
+| [The requirements say Node.js 24](https://github.com/msckell/precizzle/pull/7#discussion_r4505340058), but the locked `jsdom` needs 24.15 or later | Valid. `jsdom` and `w3c-xmlserializer` require `^24.15.0` in the 24 line in `package-lock.json` | The requirements say Node.js 24.15 or later |
+
+The review of `d00e884` raised two more findings about the same requirements line, both verified and fixed in commit `7c975bc`:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [“Node.js 24.15 or later” includes Node.js 25](https://github.com/msckell/precizzle/pull/7#discussion_r4505355597) | Valid. The `jsdom` range is `^22.22.2 \|\| ^24.15.0 \|\| >=26.0.0`, which excludes 25 | Node.js 24.15 or a later 24.x release |
+| In the review summary: the Go requirement should match `go.mod` | Valid. `backend/go.mod` says `go 1.27.3`, and a Go 1.21 or later toolchain downloads it automatically | Go 1.27.3 or later, noting the automatic download |
+
+The review of `4de8feb` raised one more finding:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [The automatic toolchain download needs Go 1.21 or later and a `GOTOOLCHAIN` that allows it](https://github.com/msckell/precizzle/pull/7#discussion_r4505363424) | Valid. Go 1.20 cannot switch toolchains, and `GOTOOLCHAIN=local` disables it | Commit `11812fc`: the note is removed, and the requirement is simply Go 1.27.3 or later |
