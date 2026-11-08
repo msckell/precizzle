@@ -2,10 +2,40 @@
 
 A full-stack calculator for financial and accounting use. Every result is exact or explicitly marked as approximate: 0.1 + 0.2 returns 0.3, and 1 ÷ 3 × 3 returns 1.
 
+![Precizzle on desktop and on a phone](docs/images/banner.png)
+
 - Frontend: React with TypeScript.
 - Backend: a REST microservice in Go, the single source of truth for results.
 
 Operations: addition, subtraction, multiplication, division, exponentiation, square root and percentage.
+
+## A quick tour
+
+Every image and animation is a capture of the app running from the Docker image.
+
+**Loan payment formula with a fraction and an exponent**
+
+![Loan payment formula with a fraction and an exponent](docs/images/loan-payment.png)
+
+**Price with 21% VAT and a 10% discount**
+
+![Price with 21% VAT and a 10% discount](docs/images/vat-discount.png)
+
+**Square root with an approximate result**
+
+![Square root with an approximate result](docs/images/square-root.png)
+
+**Result expanded from 4 to 100 decimals**
+
+![Result expanded from 4 to 100 decimals](docs/images/expand-decimals.gif)
+
+**History of the last 100 calculations**
+
+![History of the last 100 calculations](docs/images/history.png)
+
+**Loading a saved calculation to extend it, and using a saved result in a new one**
+
+![Loading a saved calculation to extend it, and using a saved result in a new one](docs/images/history-load-use.gif)
 
 ## Quick start
 
