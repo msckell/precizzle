@@ -2,7 +2,7 @@
 
 A full-stack calculator for financial and accounting use. Every result is exact or explicitly marked as approximate: 0.1 + 0.2 returns 0.3, and 1 ÷ 3 × 3 returns 1.
 
-![Precizzle on desktop and on a phone](docs/images/banner.png)
+![Precizzle on desktop with a loan payment formula, and on a phone with 1250 + 21% − 10% = 1361.25](docs/images/banner.png)
 
 - Frontend: React with TypeScript.
 - Backend: a REST microservice in Go, the single source of truth for results.
@@ -15,27 +15,27 @@ Every image and animation is a capture of the app running from the Docker image.
 
 **Loan payment formula with a fraction and an exponent**
 
-![Loan payment formula with a fraction and an exponent](docs/images/loan-payment.png)
+![200000 × 0.005 / (1 − (1 + 0.005)^−360) with the repeating result 1199.1010…](docs/images/loan-payment.png)
 
 **Price with 21% VAT and a 10% discount**
 
-![Price with 21% VAT and a 10% discount](docs/images/vat-discount.png)
+![1250 + 21% − 10% on a phone, with the exact result 1361.25](docs/images/vat-discount.png)
 
 **Square root with an approximate result**
 
-![Square root with an approximate result](docs/images/square-root.png)
+![10 × √2 with the approximate result ≈ 14.14213…](docs/images/square-root.png)
 
 **Result expanded from 4 to 100 decimals**
 
-![Result expanded from 4 to 100 decimals](docs/images/expand-decimals.gif)
+![1 ÷ 7 gives 0.1428…, and clicks on the ellipsis show 20, 40, 60, 80 and then 100 decimals](docs/images/expand-decimals.gif)
 
 **History of the last 100 calculations**
 
-![History of the last 100 calculations](docs/images/history.png)
+![The history panel, under "Saved on this device, up to 100.", with four calculations and their Load and Use buttons: the loan payment = 1199.1010…, 10 × √2 ≈ 14.14213…, 1250 + 21% − 10% = 1361.25 and 1 ÷ 7 = 0.1428…](docs/images/history.png)
 
 **Loading a saved calculation to extend it, and using a saved result in a new one**
 
-![Loading a saved calculation to extend it, and using a saved result in a new one](docs/images/history-load-use.gif)
+![Load restores the loan formula and + 5² gives 1224.1010…; then Use starts a new calculation, 1361.25 ÷ 12 = 113.4375](docs/images/history-load-use.gif)
 
 ## Quick start
 
