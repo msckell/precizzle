@@ -322,14 +322,12 @@ function remove(state: EditorState, forward: boolean): EditorState {
   if (parent) {
     const parentPath = path.slice(0, -1);
     const structure = rowAt(state.root, parentPath)![parent.index];
-    if (slots(structure).every(([, child]) => child.length === 0)) {
-      return splice(
-        at(state, { path: parentPath, index: parent.index }),
-        parent.index,
-        1,
-        [],
-      );
-    }
+    const outside = at(state, { path: parentPath, index: parent.index });
+    if (slots(structure).every(([, child]) => child.length === 0))
+      return splice(outside, parent.index, 1, []);
+    // Backspace in an empty denominator undoes the division and keeps the numerator inline.
+    if (!forward && parent.slot === "den" && structure.type === "frac")
+      return splice(outside, parent.index, 1, structure.num);
   }
   return horizontal(state, forward);
 }
