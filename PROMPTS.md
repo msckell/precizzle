@@ -2412,3 +2412,10 @@ The Backend, Frontend and Docker jobs passed. CodeRabbit requested changes with 
 | [SPEC section 1 says only Escape works while the history is open](https://github.com/msckell/precizzle/pull/7#discussion_r4505340056), but Tab, Enter and Space still work on its buttons | Valid. `useKeyboard.ts` returns early for every key while the history is open, without calling `preventDefault`, so the browser handles them | The SPEC says the calculator keys are off, Escape closes the history, and Tab, Enter and Space work on its buttons |
 | [The Quick start `curl` example does not name its shell](https://github.com/msckell/precizzle/pull/7#discussion_r4505340057); in Windows PowerShell 5.1, `curl` is an alias for `Invoke-WebRequest` | Valid. The Examples section already says the examples use a POSIX shell | The Quick start names a POSIX shell such as Git Bash |
 | [The requirements say Node.js 24](https://github.com/msckell/precizzle/pull/7#discussion_r4505340058), but the locked `jsdom` needs 24.15 or later | Valid. `jsdom` and `w3c-xmlserializer` require `^24.15.0` in the 24 line in `package-lock.json` | The requirements say Node.js 24.15 or later |
+
+The review of `d00e884` raised two more findings about the same requirements line, both verified and fixed in commit `7c975bc`:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [“Node.js 24.15 or later” includes Node.js 25](https://github.com/msckell/precizzle/pull/7#discussion_r4505355597) | Valid. The `jsdom` range is `^22.22.2 \|\| ^24.15.0 \|\| >=26.0.0`, which excludes 25 | Node.js 24.15 or a later 24.x release |
+| In the review summary: the Go requirement should match `go.mod` | Valid. `backend/go.mod` says `go 1.27.3`, and a Go 1.21 or later toolchain downloads it automatically | Go 1.27.3 or later, noting the automatic download |
