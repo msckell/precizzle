@@ -2488,3 +2488,15 @@ The owner approved the image checkpoint with a short confirmation, so that messa
 - Every number in the images comes from the API: `1199.1010…` for the loan payment, `1361.25` for the price, `≈ 14.14213…` for 10 × √2, 100 decimals of 1 ÷ 7, `1224.1010…` after adding 5², and `113.4375` for 1361.25 ÷ 12.
 - After "Use", the focus stays on the History button, so Enter presses that button (D77). The history GIF clicks the `=` key instead, as a user would.
 - Milestone 2, records: the seven files in `docs/images/` (`*.gif` marked as binary in `.gitattributes`), the "A quick tour" section and the banner in the README, D94 in the SPEC, and this section.
+
+### 7.4 Pull request and review
+
+#### CodeRabbit triage ([PR #8](https://github.com/msckell/precizzle/pull/8))
+
+The Backend, Frontend and Docker jobs passed. CodeRabbit requested changes with one minor finding, verified and fixed in commit `2f95f18`:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [The alt text of the VAT image omits the calculation and its result](https://github.com/msckell/precizzle/pull/8#discussion_r4506976290), and the other calculation images have the same problem | Valid. Each alt text repeated its bold caption, so the expressions and results were only inside the images | The captions stay as they are. Each image's alt text gives what it shows: the expression and result of each calculation, the expansion steps of 1 ÷ 7, the four history entries, and the Load and Use steps of the history GIF |
+
+CodeRabbit approved `2f95f18`.
