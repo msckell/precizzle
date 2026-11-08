@@ -7,13 +7,27 @@ A full-stack calculator for financial and accounting use. Every result is exact 
 
 Operations: addition, subtraction, multiplication, division, exponentiation, square root and percentage.
 
-## Status
+## Quick start
 
-Work in progress. Setup and run instructions and API examples are added as each block lands.
+With Docker running, from the repository root:
+
+```sh
+docker build -t precizzle .
+docker run --rm -d -p 127.0.0.1:8080:8080 --name precizzle precizzle
+```
+
+Open http://127.0.0.1:8080 for the calculator, or call the API:
+
+```sh
+curl -s http://127.0.0.1:8080/api/v1/evaluate -H 'Content-Type: application/json' -d '{"expression": "0.1+0.2"}'
+# {"value":"0.3","decimal":"0.3","kind":"exact"}
+```
+
+`docker stop precizzle` stops and removes the container. [Docker](#docker) has the details. To run the tests, see [Development](#development) and [Tests and coverage](#tests-and-coverage).
 
 ## Development
 
-Requirements: Go 1.27 and Node.js 24 with npm.
+Requirements: Go 1.27 and Node.js 24 with npm. Docker is needed only for the image.
 
 Backend, from `backend/`:
 
@@ -28,6 +42,7 @@ Frontend, from `frontend/`:
 ```sh
 npm ci              # install dependencies
 npm test            # run the tests
+npm run coverage    # run the tests with coverage
 npm run lint        # ESLint
 npm run typecheck   # TypeScript
 npm run build       # production build in dist/
@@ -41,6 +56,20 @@ npm run dev         # start the dev server
   - ESLint 10.14 and typescript-eslint 8.72 require `minimatch` 10, and no patched 10.x release exists.
   - Forcing version 11 with npm `overrides` works in a local test, but it goes outside the versions ESLint supports, so it is not applied.
   - The advisory goes away when ESLint moves to `minimatch` 11.
+
+## Tests and coverage
+
+Statement coverage, measured with `go test -cover ./...` in `backend/` and `npm run coverage` in `frontend/` (D92):
+
+| Layer | Scope | Coverage | CI minimum |
+|---|---|---|---|
+| Backend | `internal/calc`: number model and arithmetic | 100.0% | 95% |
+| Backend | `internal/expr`: expression parser and evaluator | 99.5% | 95% |
+| Backend | `internal/api`: HTTP handlers | 100.0% | 90% |
+| Backend | `main`: server startup and static files | 89.5% | — |
+| Frontend | `frontend/src` without `main.tsx`: 408 tests | 99.01% | 90% |
+
+CI runs both on every pull request and on `main`. The Backend job writes the per-package table to the run summary, and the Frontend job prints the Vitest coverage report; each fails when a minimum is not met. The [frontend](#tests-and-ci) and [backend](#tests-and-ci-1) sections describe what the tests cover.
 
 ## Docker
 
@@ -140,7 +169,7 @@ PRECIZZLE_ADDR=127.0.0.1:9090 go run .           # bash
 $env:PRECIZZLE_ADDR = "127.0.0.1:9090"; go run .  # PowerShell
 ```
 
-During development the frontend reaches the API through the Vite dev server proxy, so the backend needs no CORS headers. Block 2 configures the proxy.
+During development the frontend reaches the API through the Vite dev server proxy, so the backend needs no CORS headers. The proxy is set in [`frontend/vite.config.ts`](frontend/vite.config.ts).
 
 ### Endpoints
 
@@ -269,6 +298,8 @@ The full list, with the reason for each decision, is in the [decisions log](docs
 
 ## Project documents
 
+- [docs/prompts/00-master-prompt.md](docs/prompts/00-master-prompt.md): the master prompt that defined the product, the workflow and the plan in blocks.
 - [docs/SPEC.md](docs/SPEC.md): product definition, number model, API contract, decisions log and out of scope list.
 - [docs/plans/](docs/plans/): the approved plan of each block.
 - [PROMPTS.md](PROMPTS.md): the prompts that drove the project.
+- [Dockerfile](Dockerfile) and [`.github/workflows/ci.yml`](.github/workflows/ci.yml): the image and the CI checks.
