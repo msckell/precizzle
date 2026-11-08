@@ -59,6 +59,7 @@ func TestNewHandler(t *testing.T) {
 		{name: "health rejects POST", staticDir: dir, method: "POST", path: "/healthz", wantStatus: 405, wantBody: `"code":"method_not_allowed"`, wantProblem: true},
 		{name: "API rejects GET", staticDir: dir, method: "GET", path: "/api/v1/add", wantStatus: 405, wantBody: `"code":"method_not_allowed"`, wantProblem: true},
 		{name: "unknown API path", staticDir: dir, method: "GET", path: "/api/v1/nope", wantStatus: 404, wantBody: `"code":"not_found"`, wantProblem: true},
+		{name: "API root without a slash", staticDir: dir, method: "POST", path: "/api", wantStatus: 404, wantBody: `"code":"not_found"`, wantProblem: true},
 		{name: "POST outside the API", staticDir: dir, method: "POST", path: "/", wantStatus: 404, wantBody: `"code":"not_found"`, wantProblem: true},
 	}
 	for _, tt := range tests {

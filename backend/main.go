@@ -42,6 +42,8 @@ func newHandler(staticDir string) http.Handler {
 	}
 	files := http.FileServerFS(os.DirFS(staticDir))
 	mux := http.NewServeMux()
+	// Without the exact "/api" pattern, the subtree pattern would redirect "/api" to "/api/".
+	mux.Handle("/api", apiHandler)
 	mux.Handle("/api/", apiHandler)
 	mux.Handle("/healthz", apiHandler)
 	// A "GET /" pattern would conflict with "/api/", so the method is checked here.
