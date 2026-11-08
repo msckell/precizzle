@@ -2253,3 +2253,58 @@ English translation:
 > When you finish, save everything in local commits and stop at the checkpoint to review the results.
 >
 > Do not push, open PRs or merge without my authorization.
+
+### 5.4 Pull request and review
+
+**Opening the pull request.** Original (Spanish):
+
+> Perfecto, apruebo el Hito 3 y autorizo el push de chore/docker y la apertura del Pull Request.
+>
+> Me parece bien la descripción propuesta, incluyendo Summary, Motivation, Testing, Decisions y Out of scope.
+>
+> Para el título, prefiero:
+>
+> build: run Precizzle frontend and backend in one Docker image
+>
+> Después de abrir el PR:
+>
+> 1. Verificá que los jobs Backend, Frontend y Docker se ejecuten correctamente en GitHub Actions.
+> 2. SeguÍ el protocolo habitual de CodeRabbit.
+> 3. Revisá todas las observaciones, incluyendo nitpicks, y distinguí los problemas reales de las sugerencias opcionales.
+> 4. Resolvé de forma autónoma los ajustes menores, documentando las decisiones. Consultame únicamente si aparece un problema importante de arquitectura, seguridad o comportamiento.
+> 5. Evitá cambios innecesarios que amplíen el alcance del proyecto.
+>
+> Cuando el PR esté aprobado, todos los checks estén en verde y no queden observaciones bloqueantes, presentame el estado final para autorizar el merge.
+>
+> No hagas merge sin mi autorización.
+
+English translation:
+
+> Perfect, I approve Milestone 3 and authorize pushing chore/docker and opening the Pull Request.
+>
+> The proposed description is fine, including Summary, Motivation, Testing, Decisions and Out of scope.
+>
+> For the title, I prefer:
+>
+> build: run Precizzle frontend and backend in one Docker image
+>
+> After opening the PR:
+>
+> 1. Verify that the Backend, Frontend and Docker jobs run correctly in GitHub Actions.
+> 2. Follow the usual CodeRabbit protocol.
+> 3. Review every observation, nitpicks included, and tell real problems apart from optional suggestions.
+> 4. Resolve minor adjustments on your own, documenting the decisions. Ask me only if an important architecture, security or behavior problem appears.
+> 5. Avoid unnecessary changes that widen the scope of the project.
+>
+> When the PR is approved, every check is green and no blocking observations remain, present the final state to me so I can authorize the merge.
+>
+> Do not merge without my authorization.
+
+#### CodeRabbit triage ([PR #6](https://github.com/msckell/precizzle/pull/6))
+
+The first run of the Backend, Frontend and Docker jobs passed. Under the owner's instruction to resolve minor findings autonomously, the assistant verified and decided both findings:
+
+| Finding | Verification | Final decision |
+|---|---|---|
+| [The error cases of `TestNewHandler` have an empty `wantBody`](https://github.com/msckell/precizzle/pull/6#discussion_r4504698605), and `strings.Contains(body, "")` always passes, so their bodies are not checked | Valid. Changing an expected code made the test fail only once each case had its own expectation | Commit `7563366`: each Problem Details case checks its `code`, and the missing file checks `404 page not found` |
+| Additional comment, marked unverified: use `httptest.NewRequestWithContext` to satisfy the `noctx` linter | Not valid for this repository. The Go tooling is `gofmt` and `go vet` (CLAUDE.md), and neither has a `noctx` check. The other eight test requests in `backend/` use `httptest.NewRequest`, whose context is `context.Background()` | No change; explained in a PR comment |
